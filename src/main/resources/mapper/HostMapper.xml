@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.magic.ssh.mapper.HostMapper">
+    <insert id="insertHost" parameterType="com.magic.ssh.entity.Host">
+        INSERT INTO ssh_host (host_id, ip_address, hostname, port, username, password, identity, passphrase, status, remark)
+        VALUES (#{hostId},#{ipAddress},#{hostname},#{port},#{username},#{password},#{identity},#{passphrase},#{status},#{remark});
+    </insert>
+    <insert id="saveUser">
+
+    </insert>
+    <update id="updateHost" parameterType="com.magic.ssh.entity.Host">
+        UPDATE ssh_host
+        <trim prefix="SET" suffixOverrides="," suffix=" WHERE host_id=#{hostId}">
+            <if test="ipAddress != null and ipAddress.length()>0">  ip_address=#{ipAddress}, </if>
+            <if test="hostname != null and hostname.length()>0">  hostname=#{hostname}, </if>
+            <if test="username != null and username.length()>0">  username=#{username}, </if>
+            <if test="password != null and password.length()>0">  password=#{password}, </if>
+            <if test="status != null"> status=#{status} , </if>
+            <if test="port != null and port > 0"> port=#{port}, </if>
+            <if test="identity != null and identity.length()>0">  identity=#{identity}, </if>
+            <if test="passphrase != null and passphrase.length()>0">  passphrase=#{passphrase}, </if>
+            <if test="remark != null and remark.length()>0">  remark=#{remark}, </if>
+        </trim>
+    </update>
+    <delete id="deleteHost">
+        DELETE FROM ssh_host WHERE (host_id=#{hostId});
+    </delete>
+
+    <select id="queryHost" resultType="com.magic.ssh.entity.Host">
+        SELECT * FROM ssh_host WHERE (host_id=#{hostId});
+    </select>
+    <select id="getHostByUserId" resultType="com.magic.ssh.entity.Host">
+        SELECT * FROM ssh_host
+    </select>
+</mapper>

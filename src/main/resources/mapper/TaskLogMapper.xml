@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.magic.ssh.mapper.TaskLogMapper">
+    <insert id="insertTaskLog" parameterType="com.magic.ssh.entity.TaskLog" useGeneratedKeys="true"
+            keyProperty="taskLogId" keyColumn="task_log_id">
+        INSERT INTO ssh_task_log (task_id,start_time,end_time,status,cur_step)
+        VALUES (#{taskId},#{startTime},#{endTime},#{status},#{curStep});
+    </insert>
+    <update id="updateTaskLog">
+        UPDATE ssh_task_log
+        <trim prefix="SET" suffixOverrides="," suffix=" WHERE task_log_id=#{taskLogId}">
+            <if test="endTime != null"> end_time=#{endTime} , </if>
+            <if test="status != null "> status=#{status}, </if>
+            <if test="curStep != null "> cur_step=#{curStep}, </if>
+            reason=#{reason}
+        </trim>
+    </update>
+
+    <select id="queryTaskLog" resultType="com.magic.ssh.entity.TaskLog">
+        SELECT * FROM ssh_task_log WHERE task_log_id=#{taskLogId}
+    </select>
+
+    <select id="queryLogsByIds" resultType="com.magic.ssh.entity.TaskLog">
+        SELECT * FROM ssh_task_log WHERE task_log_id IN
+        <foreach collection="taskLogIds" item="logId" separator="," open="(" close=")"  index="index">
+            #{logId}
+        </foreach>
+    </select>
+    <select id="queryLogsByUser" resultType="com.magic.ssh.entity.TaskLog">
+        SELECT * FROM ssh_task_log WHERE user_id=#{userId}
+    </select>
+</mapper>

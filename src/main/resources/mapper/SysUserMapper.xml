@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.magic.ssh.mapper.SysUserMapper">
+
+
+    <resultMap type="com.magic.ssh.entity.security.SysUser" id="userMap">
+        <id column="id" property="userId" />
+        <result column="id" property="userId" />
+    </resultMap>
+
+    <resultMap type="com.magic.ssh.entity.security.JwtUser" id="userInfoMap">
+        <result column="username" property="username"></result>
+        <collection property="authorities" column="url" ofType="org.springframework.security.core.authority.SimpleGrantedAuthority">
+            <result property="role" column="url"  />
+        </collection>
+    </resultMap>
+
+
+    <insert id="insertUser" parameterType="com.magic.ssh.entity.security.SysUser">
+        INSERT INTO sys_user(username,password) SELECT #{username},#{password}
+        FROM DUAL where not exists(select username from sys_user where username = #{username});
+    </insert>
+
+    <insert id="saveRole">
+        INSERT INTO sys_role_user
+        (user_id, role_id)
+        VALUES
+        <foreach collection ="list" item="it" separator =",">
+            (#{it.getKey()}, #{it.getValue()})
+        </foreach >
+    </insert>
+
+    <update id="updateUser"  parameterType="com.magic.ssh.entity.security.SysUser">
+        UPDATE sys_user SET sys_user.password=#{password} where  sys_user.username=#{username};
+    </update>
+
+    <select id="getUser"  parameterType="String"   resultMap="userMap">
+        SELECT id,username,password from sys_user where username=#{username};
+    </select>
+
+    <delete id="deleteUser" parameterType="String">
+        DELETE FROM sys_user su,sys_role_user sru where su.username=#{username} AND su.id=sru.user_id;
+    </delete>
+
+
+    <select id="getUserInfo" parameterType="java.lang.String" resultMap="userInfoMap">
+        SELECT u.username,sr.name,sp.url from sys_user u
+        LEFT JOIN sys_role_user sru ON sru.user_id=u.id
+        LEFT JOIN sys_role sr ON sr.id=sru.role_id
+        LEFT JOIN sys_permission_role spr on spr.role_id=sr.id
+        LEFT JOIN sys_permission sp on sp.id =spr.permission_id
+        where u.username=#{username}
+    </select>
+
+
+    <resultMap type="com.magic.ssh.entity.security.SysRole" id="roleMap">
+        <id column="id" property="roleId" />
+        <result column="name" property="roleName" />
+    </resultMap>
+    <select id="getRoleByUserId" parameterType="Integer" resultMap="roleMap">
+        select u.id,username,r.name
+        from sys_user u
+        LEFT JOIN sys_role_user sru on u.id= sru.user_id
+        LEFT JOIN sys_role r on sru.role_id=r.id
+        where u.id=#{userId}
+    </select>
+
+    <select id="getRoleByUserName" parameterType="String" resultMap="roleMap">
+        select u.id,username,r.name
+        from sys_user u
+        LEFT JOIN sys_role_user sru on u.id= sru.user_id
+        LEFT JOIN sys_role r on sru.role_id=r.id
+        where u.username=#{username}
+    </select>
+</mapper>

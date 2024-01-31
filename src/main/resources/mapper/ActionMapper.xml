@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.magic.ssh.mapper.ActionMapper">
+    <insert id="insertAction" parameterType="com.magic.ssh.entity.Action">
+        INSERT INTO ssh_action (action_name,host_id,cmd,max_size,max_second,stop_words,check_process)
+        VALUES (#{actionName},#{hostId},#{cmd},#{maxSize},#{maxSecond},#{stopWords},#{checkProcess});
+    </insert>
+    <insert id="saveUser">
+
+    </insert>
+    <update id="updateAction" parameterType="com.magic.ssh.entity.Action">
+        UPDATE ssh_action
+        <trim prefix="SET" suffixOverrides="," suffix=" WHERE action_id=#{actionId}">
+            <if test="actionName != null and actionName.length()>0">  action_name=#{actionName}, </if>
+            <if test="hostId != null and hostId.length()>0">  host_id=#{hostId}, </if>
+            <if test="cmd != null and cmd.length()>0">  cmd=#{cmd}, </if>
+            <if test="maxSize != null"> max_size=#{maxSize} , </if>
+            <if test="maxSecond != null"> max_second=#{maxSecond}, </if>
+            <if test="stopWords != null and stopWords.length()>0">  stop_words=#{stopWords}, </if>
+            <if test="checkProcess != null and stopWords.length()>0">  check_process=#{checkProcess}, </if>
+        </trim>
+    </update>
+    <delete id="deleteAction">
+        DELETE FROM ssh_action WHERE action_id=#{actionId}
+    </delete>
+
+    <select id="queryAction" resultType="com.magic.ssh.entity.Action">
+        SELECT * FROM ssh_action WHERE action_id=#{actionId}
+    </select>
+    <select id="getActionByUserId" resultType="com.magic.ssh.entity.Action">
+        SELECT * FROM ssh_action
+    </select>
+    <select id="queryNumByIds" resultType="java.lang.Integer">
+        SELECT count(*) FROM ssh_action WHERE action_id in
+        <foreach item="actionId" index="index" collection="actionIds" open="(" separator="," close=")">
+            #{actionId}
+        </foreach>
+    </select>
+    <select id="queryActionsByIds" resultType="com.magic.ssh.entity.Action">
+        SELECT * FROM ssh_action WHERE action_id in
+        <foreach item="actionId" index="index" collection="actionIds" open="(" separator="," close=")">
+            #{actionId}
+        </foreach>
+    </select>
+</mapper>

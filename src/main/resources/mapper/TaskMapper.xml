@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.magic.ssh.mapper.TaskMapper">
+    <insert id="insertTask" parameterType="com.magic.ssh.entity.Task">
+        INSERT INTO ssh_task (action_ids,task_name) VALUES (#{actionIds},#{taskName})
+    </insert>
+    <insert id="saveUser">
+
+    </insert>
+    <update id="updateTask" parameterType="com.magic.ssh.entity.Task">
+        UPDATE ssh_task
+        <trim prefix="SET" suffixOverrides="," suffix=" WHERE task_id=#{taskId}">
+            <if test="actionIds != null and actionIds.length()>0">  action_ids=#{actionIds}, </if>
+            <if test="remark != null and remark.length()>0">  remark=#{remark}, </if>
+            <if test="taskName != null and remark.length()>0">  task_name=#{taskName}, </if>
+        </trim>
+    </update>
+    <delete id="deleteTask">
+        DELETE FROM ssh_task WHERE (task_id=#{taskId});
+    </delete>
+
+    <select id="queryTask" resultType="com.magic.ssh.entity.Task">
+        SELECT * FROM ssh_task WHERE (task_id=#{taskId});
+    </select>
+    <select id="queryTaskByActions" resultType="com.magic.ssh.entity.Task">
+        SELECT * FROM ssh_task WHERE (action_ids=#{actionIds});
+    </select>
+    <select id="queryTaskByUserId" resultType="com.magic.ssh.entity.Task">
+
+    </select>
+
+</mapper>
