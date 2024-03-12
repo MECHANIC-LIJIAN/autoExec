@@ -4,9 +4,6 @@
     <insert id="insertTask" parameterType="com.magic.ssh.entity.Task" useGeneratedKeys="true" keyColumn="task_id"
             keyProperty="taskId">
         INSERT INTO ssh_task (task_name) VALUES (#{taskName});
-<!--        <selectKey  keyProperty="taskId" order="AFTER" resultType="int">-->
-<!--            select last_insert_rowid()-->
-<!--        </selectKey>-->
     </insert>
 
     <update id="updateTask" parameterType="com.magic.ssh.entity.Task">

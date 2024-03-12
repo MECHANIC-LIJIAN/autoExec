@@ -73,9 +73,3 @@ CREATE TABLE `ssh_task_log` (
   `cur_step` int(10) DEFAULT NULL,
   `reason` varchar(50) DEFAULT NULL
 ) ;
-
-DROP TABLE IF EXISTS `ssh_user_host`;
-CREATE TABLE `ssh_user_host` (
-  `user_id` int(5) NOT NULL,
-  `host_id` varchar(36) NOT NULL
-);
