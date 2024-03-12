@@ -25,22 +25,16 @@ public class TaskController {
     @GetMapping("/query")
     public Result guery(@RequestParam Integer taskId) {
         Task task = taskService.getTaskInfoById(taskId);
-        if (Objects.isNull(task)) {
-            return Result.build(ResultCode.OP_ERROR);
-        } else {
-            return Result.success( task);
-        }
+        task.setActionList(null);
+        task.setExecList(taskService.getExecStepList(task));
+        return Result.success(task);
     }
 
     @GetMapping("/queryByUser")
     public Result gueryRoles(@RequestParam Integer userId) {
 
         List<Task> list = taskService.getTaskByUser(userId);
-        if (list.isEmpty()) {
-            return Result.build(ResultCode.OP_ERROR);
-        } else {
-            return Result.success( list);
-        }
+        return Result.success(list);
     }
 
     @PostMapping("/add")
@@ -63,7 +57,7 @@ public class TaskController {
     }
 
     @PostMapping("/delete")
-    public Result delete(@Validated(Task.Update.class) @RequestBody Task task) {
+    public Result delete(@Validated(Task.Delete.class) @RequestBody Task task) {
         if (taskService.deleteTask(task.getTaskId()) > 0) {
             return Result.success();
         } else {

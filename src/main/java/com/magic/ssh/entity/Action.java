@@ -16,6 +16,7 @@ public class Action {
     @NotBlank(groups ={Update.class,Create.class})
     @Null(groups = Exec.class)
     private String hostId;
+    private String hostName;
 
     @NotBlank(groups ={Update.class,Create.class})
     @Null(groups = Exec.class)
@@ -24,11 +25,15 @@ public class Action {
     @Min(1)
     @Max(100)
     private int maxSize = 5;
+
     @Min(1)
     @Max(300)
     private int maxSecond = 120;
+
     private String stopWords;
     private String checkProcess;
+
+    private Integer step;
 
 
     // 更新分组

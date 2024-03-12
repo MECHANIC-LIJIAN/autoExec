@@ -7,8 +7,6 @@ import java.util.ArrayList;
 @Data
 public class ActionLog {
     private Integer actionLogId;
-    private Integer taskLogId;
-    private Integer step;
     private Integer actionId;
     private Long startTime;
     private Long endTime;
@@ -17,6 +15,8 @@ public class ActionLog {
     private Integer status;
     private String reason;
     private Integer checkRes;
+
+    private Integer step;
 
     private String hostName;
     private String actionName;

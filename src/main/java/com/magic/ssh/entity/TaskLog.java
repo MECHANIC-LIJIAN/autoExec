@@ -2,14 +2,12 @@ package com.magic.ssh.entity;
 
 import lombok.Data;
 
-import javax.validation.constraints.NotNull;
+import java.util.List;
 
 @Data
 public class TaskLog {
 
-    @NotNull
     private Integer taskLogId;
-    @NotNull
     private Integer taskId;
 
     private Long startTime;
@@ -17,4 +15,6 @@ public class TaskLog {
     private Integer status;
     private String reason;
     private Integer curStep;
+
+    List<ActionLog> actionLogs;
 }

@@ -19,7 +19,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 @Configuration
 @EnableAsync
 public class ThreadPoolTaskConfig{
-
     private final TaskAsyncConstants taskAsyncConstants;
     private final ExecAsyncContents execAsyncContents;
 

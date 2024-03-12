@@ -25,22 +25,17 @@ public class ActionLogServiceImpl implements ActionLogService {
     }
 
     @Override
-    public List<ActionLog> getLogByTaskLogId(Integer taskLogId) {
-        return actionLogMapper.queryLogByTaskLogId(taskLogId);
-    }
-
-    @Override
     public Integer insertActionLog(ActionLog actionLog) {
         return actionLogMapper.insertActionLog(actionLog);
     }
 
     @Override
-    public Integer deleteActionLogByIds(Integer taskLogId, Integer step) {
-        return actionLogMapper.deleteActionLog(taskLogId, step);
+    public Integer deleteActionLogByIds(List<Integer> errLogIds) {
+        return actionLogMapper.deleteActionLog(errLogIds);
     }
 
     @Override
-    public List<ActionLog> getActionLogByIds(List<Integer> actionLogIds) {
+    public List<ActionLog> getLogsByIds(List<Integer> actionLogIds) {
         return actionLogMapper.queryLogsByIds(actionLogIds);
     }
 

@@ -12,9 +12,7 @@ public interface ActionLogMapper {
 
     Integer insertActionLog(ActionLog actionLog);
 
-    Integer deleteActionLog(Integer taskLogId, Integer step);
-
-    List<ActionLog> queryLogByTaskLogId(Integer taskLogId);
+    Integer deleteActionLog(List<Integer> errLogIds);
 
     List<ActionLog> queryLogsByIds(List<Integer> actionLogIds);
 

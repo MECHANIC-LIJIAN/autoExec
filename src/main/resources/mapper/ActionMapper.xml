@@ -5,9 +5,7 @@
         INSERT INTO ssh_action (action_name,host_id,cmd,max_size,max_second,stop_words,check_process)
         VALUES (#{actionName},#{hostId},#{cmd},#{maxSize},#{maxSecond},#{stopWords},#{checkProcess});
     </insert>
-    <insert id="saveUser">
 
-    </insert>
     <update id="updateAction" parameterType="com.magic.ssh.entity.Action">
         UPDATE ssh_action
         <trim prefix="SET" suffixOverrides="," suffix=" WHERE action_id=#{actionId}">
@@ -27,15 +25,23 @@
     <select id="queryAction" resultType="com.magic.ssh.entity.Action">
         SELECT * FROM ssh_action WHERE action_id=#{actionId}
     </select>
-    <select id="getActionByUserId" resultType="com.magic.ssh.entity.Action">
-        SELECT * FROM ssh_action
+
+    <select id="queryActionByHostId" resultType="com.magic.ssh.entity.Action">
+        SELECT * FROM ssh_action WHERE host_id=#{hostId} LIMIT 1
     </select>
+
+    <select id="getActionByUserId" resultType="com.magic.ssh.entity.Action">
+        SELECT sa.*,sh.hostName FROM ssh_action sa
+        LEFT JOIN ssh_host sh ON sa.host_id = sh.host_id
+    </select>
+
     <select id="queryNumByIds" resultType="java.lang.Integer">
         SELECT count(*) FROM ssh_action WHERE action_id in
         <foreach item="actionId" index="index" collection="actionIds" open="(" separator="," close=")">
             #{actionId}
         </foreach>
     </select>
+
     <select id="queryActionsByIds" resultType="com.magic.ssh.entity.Action">
         SELECT * FROM ssh_action WHERE action_id in
         <foreach item="actionId" index="index" collection="actionIds" open="(" separator="," close=")">

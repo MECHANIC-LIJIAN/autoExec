@@ -5,10 +5,10 @@ spring:
   application:
     name: AutoExectue
   datasource:
-    username:
-    password:
-    url: jdbc:mysql://localhost:3306/ssh?useUnicode=true&characterEncoding=utf-8&serverTimezone=GMT&useSSL=false&allowPublicKeyRetrieval=true
-    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:sqlite:ssh.db?journal_mode=WAL&synchronous=NORMAL
+    driver-class-name: org.sqlite.JDBC
+    hikari:
+      maximum-pool-size: 1 #最大连接数,默认值10.
 
 logging:
   level:
@@ -35,3 +35,5 @@ mybatis:
   type-aliases-package: com.magic.ssh.entity
   configuration:
     map-underscore-to-camel-case: true
+
+

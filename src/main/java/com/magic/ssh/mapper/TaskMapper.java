@@ -1,7 +1,7 @@
 package com.magic.ssh.mapper;
 
+import com.magic.ssh.entity.StepAction;
 import com.magic.ssh.entity.Task;
-import javafx.util.Pair;
 import org.apache.ibatis.annotations.Mapper;
 
 import java.util.List;
@@ -11,8 +11,10 @@ public interface TaskMapper {
 
     Task queryTask(Integer taskId);
 
+    Task queryTaskInfo(Integer taskId);
 
     Integer insertTask(Task task);
+
 
     Integer updateTask(Task task);
 
@@ -20,7 +22,12 @@ public interface TaskMapper {
 
     List<Task> queryTaskByUserId(Integer userId);
 
-    Task queryTaskByActions(String actionIds);
+    Task queryTaskByAction(Integer actionId);
 
-    Integer saveUser(List<Pair<Integer,String>> list);
+    Integer insertStep(List<StepAction> stepActions);
+
+    List<StepAction> queryStep(Integer taskId);
+
+    Integer deleteStep(Integer taskId);
+
 }

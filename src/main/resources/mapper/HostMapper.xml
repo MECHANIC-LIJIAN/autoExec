@@ -5,9 +5,7 @@
         INSERT INTO ssh_host (host_id, ip_address, hostname, port, username, password, identity, passphrase, status, remark)
         VALUES (#{hostId},#{ipAddress},#{hostname},#{port},#{username},#{password},#{identity},#{passphrase},#{status},#{remark});
     </insert>
-    <insert id="saveUser">
 
-    </insert>
     <update id="updateHost" parameterType="com.magic.ssh.entity.Host">
         UPDATE ssh_host
         <trim prefix="SET" suffixOverrides="," suffix=" WHERE host_id=#{hostId}">

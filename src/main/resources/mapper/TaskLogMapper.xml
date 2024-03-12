@@ -9,9 +9,9 @@
     <update id="updateTaskLog">
         UPDATE ssh_task_log
         <trim prefix="SET" suffixOverrides="," suffix=" WHERE task_log_id=#{taskLogId}">
-            <if test="endTime != null"> end_time=#{endTime} , </if>
-            <if test="status != null "> status=#{status}, </if>
-            <if test="curStep != null "> cur_step=#{curStep}, </if>
+            <if test="endTime != null">end_time=#{endTime} ,</if>
+            <if test="status != null ">status=#{status},</if>
+            <if test="curStep != null ">cur_step=#{curStep},</if>
             reason=#{reason}
         </trim>
     </update>
@@ -22,11 +22,87 @@
 
     <select id="queryLogsByIds" resultType="com.magic.ssh.entity.TaskLog">
         SELECT * FROM ssh_task_log WHERE task_log_id IN
-        <foreach collection="taskLogIds" item="logId" separator="," open="(" close=")"  index="index">
+        <foreach collection="taskLogIds" item="logId" separator="," open="(" close=")" index="index">
             #{logId}
         </foreach>
     </select>
     <select id="queryLogsByUser" resultType="com.magic.ssh.entity.TaskLog">
         SELECT * FROM ssh_task_log WHERE user_id=#{userId}
     </select>
+
+    <resultMap id="taskStepLog" type="com.magic.ssh.entity.TaskLog">
+        <id column="task_log_id" property="taskLogId" jdbcType="INTEGER"/>
+        <result column="task_id" property="taskId" jdbcType="INTEGER"/>
+        <result column="task_start_time" property="startTime" jdbcType="BIGINT"/>
+        <result column="task_end_time" property="endTime" jdbcType="BIGINT"/>
+        <result column="task_status" property="status" jdbcType="TINYINT"/>
+        <result column="task_reason" property="reason" jdbcType="VARCHAR"/>
+        <result column="cur_step" property="curStep" jdbcType="TINYINT"/>
+        <collection property="actionLogs" ofType="com.magic.ssh.entity.ActionLog">
+            <id column="action_log_id" property="actionLogId" jdbcType="INTEGER" />
+            <result column="action_id" property="actionId" jdbcType="INTEGER"/>
+            <result column="action_name" property="actionName" jdbcType="VARCHAR"/>
+            <result column="exec_res" property="execRes" jdbcType="VARCHAR"/>
+            <result column="start_time" property="startTime" jdbcType="BIGINT"/>
+            <result column="end_time" property="endTime" jdbcType="BIGINT"/>
+            <result column="exit_status" property="exitStatus" jdbcType="TINYINT"/>
+            <result column="status" property="status" jdbcType="TINYINT"/>
+            <result column="check_res" property="checkRes" jdbcType="VARCHAR"/>
+            <result column="reason" property="reason" jdbcType="VARCHAR"/>
+            <result column="step" property="step" jdbcType="TINYINT"/>
+        </collection>
+    </resultMap>
+
+    <select id="queryLogByTaskLogId" resultMap="taskStepLog">
+        SELECT
+            task_log_id,task_id,task_start_time,task_end_time,task_status,cur_step,reason task_reason,action_name,
+            a.action_id,a.step,b.*
+        FROM
+        (
+            SELECT
+                stl.task_log_id,stl.task_id,stl.start_time task_start_time,stl.end_time task_end_time,stl. STATUS task_status,
+                stl.cur_step,stl.reason task_reason,ssa.step,sa.action_name,sa.action_id
+            FROM
+                ssh_task_log stl
+            INNER JOIN ssh_step_action ssa ON ssa.task_id = stl.task_id
+            LEFT JOIN ssh_action sa ON ssa.action_id = sa.action_id
+        WHERE
+            stl.task_log_id = #{taskLogId}
+        ) a
+        LEFT JOIN (
+            SELECT
+                sal.*
+            FROM
+                ssh_step_log sstl
+            INNER JOIN ssh_action_log sal ON sstl.action_log_id = sal.action_log_id
+            WHERE
+                sstl.task_log_id = #{taskLogId}
+        ) b ON a.action_id = b.action_id
+        ORDER BY step,end_time
+    </select>
+
+    <insert id="insertStepLog" parameterType="java.util.List">
+        INSERT INTO ssh_step_log (task_log_id,action_log_id,step)
+        VALUES
+        <foreach collection="stepLogs" item="item" index="index" separator=",">
+            (
+            #{item.taskLogId},
+            #{item.actionLogId},
+            #{item.step}
+            )
+        </foreach>
+    </insert>
+
+    <select id="queryRelationList" resultType="com.magic.ssh.entity.StepLog">
+        SELECT * FROM ssh_step_log WHERE task_log_id = #{taskLogId}
+    </select>
+
+
+    <delete id="deleteStepLog">
+        DELETE FROM ssh_step_log WHERE action_log_id
+        IN
+        <foreach collection="actionLogIds" open="(" close=")" item="item" index="index" separator=",">
+            #{item}
+        </foreach>
+    </delete>
 </mapper>

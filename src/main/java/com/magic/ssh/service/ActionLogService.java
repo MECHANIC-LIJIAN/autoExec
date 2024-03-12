@@ -8,12 +8,9 @@ import java.util.List;
 public interface ActionLogService {
     ActionLog getActionLogById(Integer actionLogId);
 
-    List<ActionLog> getLogByTaskLogId(Integer taskLogId);
-
     Integer insertActionLog(ActionLog actionLog);
 
-    Integer deleteActionLogByIds(Integer taskLogId, Integer step);
+    Integer deleteActionLogByIds(List<Integer> errLogIds);
 
-
-    List<ActionLog> getActionLogByIds(List<Integer> actionLogIds);
+    List<ActionLog> getLogsByIds(List<Integer> actionLogIds);
 }

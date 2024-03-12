@@ -4,12 +4,15 @@
     <insert id="insertActionLog" parameterType="com.magic.ssh.entity.ActionLog" keyColumn="action_log_id"
             keyProperty="actionLogId" useGeneratedKeys="true">
         INSERT INTO ssh_action_log
-        (action_id,exec_res,start_time,end_time,exit_status,status,reason,task_log_id,step,check_res)
+        (action_id,exec_res,start_time,end_time,exit_status,status,reason,check_res)
         VALUES
-        (#{actionId},#{execRes},#{startTime},#{endTime},#{exitStatus},#{status},#{reason},#{taskLogId},#{step},#{checkRes});
+        (#{actionId},#{execRes},#{startTime},#{endTime},#{exitStatus},#{status},#{reason},#{checkRes});
     </insert>
     <delete id="deleteActionLog">
-        DELETE FROM ssh_action_log WHERE task_log_id = #{taskLogId} AND step = #{step}
+        DELETE FROM ssh_action_log WHERE action_log_id IN
+        <foreach collection="errLogIds" item="id" separator="," open="(" close=")">
+            #{id}
+        </foreach>
     </delete>
 
     <select id="queryActionLog" resultType="com.magic.ssh.entity.ActionLog">
@@ -17,19 +20,14 @@
     </select>
 
     <select id="queryLogsByIds" resultType="com.magic.ssh.entity.ActionLog">
-        SELECT * FROM ssh_action_log WHERE action_log_id IN
-        <foreach collection="actionLogIds" item="logId" separator="," open="(" close=")"  index="index">
-            #{logId}
-        </foreach>
-        ORDER BY step ASC
-    </select>
-
-    <select id="queryLogByTaskLogId" resultType="com.magic.ssh.entity.ActionLog">
         SELECT sal.*, sa.action_name,sh.hostname
         FROM	ssh_action_log sal
         LEFT JOIN ssh_action sa ON sal.action_id = sa.action_id
         LEFT JOIN ssh_host sh ON sa.host_id = sh.host_id
-        WHERE 	task_log_id = #{taskLogId}
-        ORDER BY 	step DESC,	end_time DESC
+        WHERE action_log_id IN
+        <foreach collection="actionLogIds" item="logId" separator="," open="(" close=")"  index="index">
+            #{logId}
+        </foreach>
     </select>
+
 </mapper>

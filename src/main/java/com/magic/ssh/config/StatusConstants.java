@@ -20,6 +20,6 @@ public class StatusConstants {
     public static final Integer EXIT_NO_CMD = 127;
 
     public static final Integer CHECK_SUCCESS = 0;
-    public static final Integer CHECK_ERROR = 1;
+    public static final Integer CHECK_ERROR = -1;
 
 }

@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 
 @Service
 public interface SSHTaskService {
-
     TaskLog execTask(Task task);
     TaskLog reExecTask(TaskLog taskLog);
 }

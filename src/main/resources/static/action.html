@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewcmd" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>动作列表</title>
 
     <link rel="stylesheet" href="libs/bootstrap/bootstrap.css">
     <link rel="stylesheet" href="libs/bootstrap/extensions/bootstrap-table.min.css">
@@ -28,7 +28,8 @@
             <div class="col-12">
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb">
-                        <li class="breadcrumb-item active" aria-current="page">Home</li>
+                        <li class="breadcrumb-item"><a href="/">主页</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">动作列表</li>
                     </ol>
                 </nav>
             </div>
@@ -63,7 +64,6 @@
 
         <div class="row">
             <div class="col-12">
-
                 <div id="toolbar" class="btn-group">
                     <button id="btn_add" type="button" class="btn btn-success">
                         <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>新增
@@ -80,8 +80,7 @@
         </div>
         <div class="row">
             <div class="col-12">
-
-                <table id="tb_departments"></table>
+                <table id="tb_action"></table>
             </div>
         </div>
         <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
@@ -125,7 +124,7 @@
                                 <div class="form-group row col-md-6">
                                     <label class="col-sm-6 col-form-label" for="maxSize">最大输出行数</label>
                                     <div class="col-sm-6">
-                                        <input type="text" class="form-control" name="maxSize" id="maxSize" value="5"
+                                        <input type="text" class="form-control" name="maxSize" id="maxSize" value="20"
                                             required>
                                     </div>
                                 </div>
@@ -133,7 +132,7 @@
                                     <label class="col-sm-6 col-form-label" for="maxSecond">最大等待时间(秒)</label>
                                     <div class="col-sm-6">
                                         <input type="text" class="form-control" name="maxSecond" id="maxSecond"
-                                            value="120" required>
+                                            value="60" required>
                                     </div>
                                 </div>
                             </div>
@@ -169,7 +168,6 @@
 </body>
 <script src="libs/jq/jquery-3.7.1.min.js"></script>
 
-<script src="libs/popper.min.js"></script>
 <script src="libs/bootstrap/bootstrap.js"></script>
 <script src="libs/bootstrap/extensions/bootstrap-table.min.js"></script>
 
@@ -185,7 +183,7 @@
 
         $.ajax({
             type: "get",
-            url: 'http://127.0.0.1:30023/api/host/queryByUser?userId=1',
+            url: 'api/host/queryByUser?userId=1',
             contentType: 'application/json',
             dataType: 'JSON',
             contentType: 'application/json',
@@ -207,7 +205,6 @@
             complete: function () {
 
             }
-
         });
 
     });
@@ -216,8 +213,8 @@
         var oTableInit = new Object();
         //初始化Table
         oTableInit.Init = function () {
-            $('#tb_departments').bootstrapTable({
-                url: 'http://127.0.0.1:30023/api/action/queryByUser?userId=1',         //请求后台的URL（*）
+            $('#tb_action').bootstrapTable({
+                url: 'api/action/queryByUser?userId=1',         //请求后台的URL（*）
                 method: 'get',                      //请求方式（*）
                 dataType: 'json',
                 toolbar: '#toolbar',                //工具按钮用哪个容器
@@ -231,15 +228,18 @@
                 pageList: [20, 30, 50], //设置为 All 或者 Unlimited，则显示所有记录。
                 sortName: "step",                     //是否启用排序
                 sortOrder: "asc",                   //排序方式
+                showRefresh: true,                  //是否显示刷新按钮
+                clickToSelect: true,                //是否启用点击选中行
+                singleSelect: true,                 //是否单选模式
                 height: $(window).height() - 200,   //table总高，如果没有设置height属性，表格自动根据记录条数觉得表格高度
                 uniqueId: "actionId",                     //每一行的唯一标识，一般为主键列
                 clickToSelect: true,                //是否启用点击选中行
 
                 columns: [
-                    { checkbox: true, visible: true },
+                    { checkbox: true },
                     { field: 'actionName', title: '动作名' },
                     {
-                        field: 'hostId',
+                        field: 'hostName',
                         title: '主机信息'
                     }, {
                         field: 'cmd',
@@ -257,7 +257,14 @@
                     }, {
                         field: 'checkProcess',
                         title: '执行后检测进程名'
-                    },],
+                    },
+                    // {
+                    //     field: 'Button', title: "操作", align: 'center', events: operateEvents, formatter: function (value, row, index) {
+                    //         var del = '<button   id="btn_delete" type="button" class="btn btn-danger delete">删除</button>'
+                    //         return del;
+                    //     }
+                    // }
+                ],
                 responseHandler: function (res) {
                     //动态渲染表格之前获取有后台传递的数据时,用于获取出除去本身渲染所需的数据的额外参数
                     //详见此函数参数的api
@@ -270,6 +277,15 @@
                 onLoadError: function () {
                     alert("数据加载失败！");
                 },
+                onCheck: function (row, $element, field) {
+                    const rows = $('#tb_action').bootstrapTable('getSelections');
+                    const cancelRows = rows.filter((r) => r.actionId !== row.actionId)
+                    const cancelIds = cancelRows.map((ele) => {
+                        return ele.actionId
+                    });
+                    // console.log(cancelIds)
+                    $('#tb_action').bootstrapTable('uncheckBy', { field: 'actionId', values: cancelIds });
+                }
 
 
             });
@@ -277,11 +293,40 @@
 
         return oTableInit;
     };
+    window.operateEvents = {
 
+        'click #btn_delete': function (e, value, row, index) {
+            if (!window.confirm("确定删除吗？")) {
+                return;
+            }
+
+            $.ajax({
+                type: "post",
+                url: "api/action/delete",
+                data: JSON.stringify(row),
+                contentType: 'application/json',
+                dataType: 'JSON',
+                success: function (data, status) {
+                    if(data['code']!==200){
+                        alert(data["msg"]);
+                    }else{
+                        alert("删除成功")
+                    }
+                },
+                error: function () {
+                    alert(data["msg"]);
+                },
+                complete: function () {
+                    $("#tb_action").bootstrapTable('refresh');
+                }
+            });
+
+        }
+    };
 
     $("#btn_add").click(function () {
+        $('#formAdd')[0].reset();
         $('#myModal').modal('show')
-
     });
 
     $("#addBtn").click(function () {
@@ -290,10 +335,10 @@
         $.each(fields, function (index, field) {
             obj[field.name] = field.value; //通过变量，将属性值，属性一起放到对象中
         })
-        console.log(obj)
-        var url = "http://127.0.0.1:30023/api/action/add"
+        // console.log(obj)
+        var url = "api/action/add"
         if (obj.actionId.length > 0) {
-            url = "http://127.0.0.1:30023/api/action/update"
+            url = "api/action/update"
         }
         $.ajax({
             type: "post",
@@ -305,7 +350,7 @@
             success: function (data, status) {
                 if (status == "success") {
                     if (data['code'] === 200) {
-                        $("#tb_departments").bootstrapTable('refresh');
+                        $("#tb_action").bootstrapTable('refresh');
                         $('#myModal').modal('hide')
                     } else {
                         alert(data["msg"])
@@ -324,12 +369,9 @@
 
 
     $("#btn_edit").click(function () {
-
-
-        var arrselections = $("#tb_departments").bootstrapTable('getSelections');
+        var arrselections = $("#tb_action").bootstrapTable('getSelections');
         if (arrselections.length > 1) {
             alert('只能选择一行进行编辑');
-
             return;
         }
         if (arrselections.length <= 0) {
@@ -337,7 +379,7 @@
             return;
         }
         const data = arrselections[0];
-        console.log(data)
+        // console.log(data)
         $("#actionId").val(data.actionId);
         $("#hostId option[value='" + data.hostId + "']").prop("selected", true);
         $("#actionName").val(data.actionName);
@@ -348,9 +390,8 @@
         $("#checkProcess").val(data.checkProcess);
         $('#myModal').modal();
     });
-
     $("#btn_delete").click(function () {
-        var arrselections = $("#tb_departments").bootstrapTable('getSelections');
+        var arrselections = $("#tb_action").bootstrapTable('getSelections');
         if (arrselections.length <= 0) {
             alert('请选择有效数据');
             return;
@@ -366,56 +407,26 @@
         }
         $.ajax({
             type: "post",
-            url: "http://127.0.0.1:30023/api/action/delete",
+            url: "api/action/delete",
             data: JSON.stringify(arrselections[0]),
             contentType: 'application/json',
             dataType: 'JSON',
             success: function (data, status) {
-                if (status == "success") {
-                    $("#tb_departments").bootstrapTable('refresh');
+                if (data['code'] !== 200) {
+                    alert(data["msg"]);
+                } else {
+                    alert("删除成功")
                 }
             },
             error: function () {
                 alert('删除失败');
             },
             complete: function () {
-
+                $("#tb_action").bootstrapTable('refresh');
             }
 
         });
     });
-
-    $("#btn_submit").click(function () {
-        //postdata.DEPARTMENT_NAME = $("#txt_departmentname").val();
-        //postdata.PARENT_ID = $("#txt_parentdepartment").val();
-        //postdata.DEPARTMENT_LEVEL = $("#txt_departmentlevel").val();
-        //postdata.STATUS = $("#txt_statu").val();
-        //$.ajax({
-        //    type: "post",
-        //    url: "/Home/GetEdit",
-        //    data: { "": JSON.stringify(postdata) },
-        //    success: function (data, status) {
-        //        if (status == "success") {
-        //            toastr.success('提交数据成功');
-        //            $("#tb_departments").bootstrapTable('refresh');
-        //        }
-        //    },
-        //    error: function () {
-        //        toastr.error('Error');
-        //    },
-        //    complete: function () {
-
-        //    }
-
-        //});
-    });
-
-    $("#btn_query").click(function () {
-        $("#tb_departments").bootstrapTable('refresh');
-    });
-
-
-
 </script>
 
 </html>

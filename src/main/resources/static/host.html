@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>主机列表</title>
 
     <link rel="stylesheet" href="libs/bootstrap/bootstrap.css">
     <link rel="stylesheet" href="libs/bootstrap/extensions/bootstrap-table.min.css">
@@ -28,7 +28,8 @@
             <div class="col-12">
                 <nav aria-label="breadcrumb">
                     <ol class="breadcrumb">
-                        <li class="breadcrumb-item active" aria-current="page">Home</li>
+                        <li class="breadcrumb-item"><a href="/">主页</a></li>
+                        <li class="breadcrumb-item active" aria-current="page">主机列表</li>
                     </ol>
                 </nav>
             </div>
@@ -81,7 +82,7 @@
         <div class="row">
             <div class="col-12">
 
-                <table id="tb_departments"></table>
+                <table id="tb_host"></table>
             </div>
         </div>
         <div class="modal fade" id="myModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel"
@@ -146,7 +147,6 @@
 </body>
 <script src="libs/jq/jquery-3.7.1.min.js"></script>
 
-<script src="libs/popper.min.js"></script>
 <script src="libs/bootstrap/bootstrap.js"></script>
 <script src="libs/bootstrap/extensions/bootstrap-table.min.js"></script>
 
@@ -165,8 +165,8 @@
         var oTableInit = new Object();
         //初始化Table
         oTableInit.Init = function () {
-            $('#tb_departments').bootstrapTable({
-                url: 'http://127.0.0.1:30023/api/host/queryByUser?userId=1',         //请求后台的URL（*）
+            $('#tb_host').bootstrapTable({
+                url: 'api/host/queryByUser?userId=1',         //请求后台的URL（*）
                 method: 'get',                      //请求方式（*）
                 dataType: 'json',
                 toolbar: '#toolbar',                //工具按钮用哪个容器
@@ -183,6 +183,7 @@
                 height: $(window).height() - 200,   //table总高，如果没有设置height属性，表格自动根据记录条数觉得表格高度
                 uniqueId: "actionLogId",                     //每一行的唯一标识，一般为主键列
                 clickToSelect: true,                //是否启用点击选中行
+                singleSelect: true,                 //是否单选模式
 
                 columns: [
                     { checkbox: true, visible: true },
@@ -197,9 +198,6 @@
                     }, {
                         field: 'username',
                         title: '用户名'
-                    }, {
-                        field: 'password',
-                        title: '密码'
                     },],
                 responseHandler: function (res) {
                     //动态渲染表格之前获取有后台传递的数据时,用于获取出除去本身渲染所需的数据的额外参数
@@ -213,6 +211,15 @@
                 onLoadError: function () {
                     alert("数据加载失败！");
                 },
+                onCheck: function (row, $element, field) {
+                    const rows = $('#tb_host').bootstrapTable('getSelections');
+                    const cancelRows = rows.filter((r) => r.hostId !== row.hostId)
+                    const cancelIds = cancelRows.map((ele) => {
+                        return ele.hostId
+                    });
+                    // console.log(cancelIds)
+                    $('#tb_host').bootstrapTable('uncheckBy', { field: 'hostId', values: cancelIds });
+                }
 
 
             });
@@ -223,6 +230,7 @@
 
 
     $("#btn_add").click(function () {
+        $("#formAdd")[0].reset();
         $('#myModal').modal('show')
 
     });
@@ -234,9 +242,9 @@
             obj[field.name] = field.value; //通过变量，将属性值，属性一起放到对象中
         })
         console.log(obj)
-        var url = "http://127.0.0.1:30023/api/host/add"
+        var url = "api/host/add"
         if (obj.hostId.length > 0) {
-            url = "http://127.0.0.1:30023/api/host/update"
+            url = "api/host/update"
         }
         $.ajax({
             type: "post",
@@ -248,7 +256,7 @@
             success: function (data, status) {
                 if (status == "success") {
                     if (data['code'] === 200) {
-                        $("#tb_departments").bootstrapTable('refresh');
+                        $("#tb_host").bootstrapTable('refresh');
                         $('#myModal').modal('hide')
                     } else {
                         alert(data["msg"])
@@ -267,7 +275,7 @@
 
 
     $("#btn_edit").click(function () {
-        var arrselections = $("#tb_departments").bootstrapTable('getSelections');
+        var arrselections = $("#tb_host").bootstrapTable('getSelections');
         if (arrselections.length > 1) {
             alert('只能选择一行进行编辑');
 
@@ -284,12 +292,12 @@
         $("#hostname").val(data.hostname);
         $("#port").val(data.port);
         $("#username").val(data.username);
-        $("#password").val(data.password);
+        $("#password").val("");
         $('#myModal').modal();
     });
 
     $("#btn_delete").click(function () {
-        var arrselections = $("#tb_departments").bootstrapTable('getSelections');
+        var arrselections = $("#tb_host").bootstrapTable('getSelections');
         if (arrselections.length <= 0) {
             alert('请选择有效数据');
             return;
@@ -305,55 +313,26 @@
         }
         $.ajax({
             type: "post",
-            url: "http://127.0.0.1:30023/api/host/delete",
+            url: "api/host/delete",
             data: JSON.stringify(arrselections[0]),
             contentType: 'application/json',
             dataType: 'JSON',
             success: function (data, status) {
-                if (status == "success") {
-                    $("#tb_departments").bootstrapTable('refresh');
+                if (data['code'] !== 200) {
+                    alert(data["msg"]);
+                } else {
+                    alert("删除成功")
                 }
             },
             error: function () {
                 alert('删除失败');
             },
             complete: function () {
-
+                $("#tb_host").bootstrapTable('refresh');
             }
 
         });
     });
-
-    $("#btn_submit").click(function () {
-        //postdata.DEPARTMENT_NAME = $("#txt_departmentname").val();
-        //postdata.PARENT_ID = $("#txt_parentdepartment").val();
-        //postdata.DEPARTMENT_LEVEL = $("#txt_departmentlevel").val();
-        //postdata.STATUS = $("#txt_statu").val();
-        //$.ajax({
-        //    type: "post",
-        //    url: "/Home/GetEdit",
-        //    data: { "": JSON.stringify(postdata) },
-        //    success: function (data, status) {
-        //        if (status == "success") {
-        //            toastr.success('提交数据成功');
-        //            $("#tb_departments").bootstrapTable('refresh');
-        //        }
-        //    },
-        //    error: function () {
-        //        toastr.error('Error');
-        //    },
-        //    complete: function () {
-
-        //    }
-
-        //});
-    });
-
-    $("#btn_query").click(function () {
-        $("#tb_departments").bootstrapTable('refresh');
-    });
-
-
 
 </script>
 

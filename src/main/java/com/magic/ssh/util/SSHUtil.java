@@ -134,11 +134,10 @@ public class SSHUtil {
                 //状态码，正常是0
                 execLog.setExitStatus(channelExec.getExitStatus());
             }
-
             execLog.setExecRes(String.join("<br>", resultLines));
             //记录执行结束始时间
             execLog.setEndTime(System.currentTimeMillis());
-            log.debug("{} -> '{}' exec success", session.getHost(), cmd);
+            log.trace("{} -> '{}' exec success", session.getHost(), cmd);
 //            log.debug(execLog.toString());
             in.close();
             err.close();
@@ -162,8 +161,11 @@ public class SSHUtil {
         return sessionPools.get(hostKey);
     }
 
-    public void close(String ip) {
-        sessionPools.get(ip).disconnect();
+    public void close(String hostKey) {
+        if (sessionPools.containsKey(hostKey)){
+            sessionPools.get(hostKey).disconnect();
+            sessionPools.remove(hostKey);
+        }
         log.info("exit success");
     }
 

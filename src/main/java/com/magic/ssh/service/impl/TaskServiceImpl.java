@@ -1,6 +1,7 @@
 package com.magic.ssh.service.impl;
 
 import com.magic.ssh.entity.Action;
+import com.magic.ssh.entity.StepAction;
 import com.magic.ssh.entity.Task;
 import com.magic.ssh.mapper.ActionMapper;
 import com.magic.ssh.mapper.TaskMapper;
@@ -25,15 +26,30 @@ public class TaskServiceImpl implements TaskService {
     }
 
     @Override
+    public Task getTask(Integer taskId) {
+        return taskMapper.queryTask(taskId);
+    }
+
+    @Override
     public Integer insertTask(Task task) {
-        if (Objects.nonNull(taskMapper.queryTaskByActions(task.getActionIds()))) {
-            return 0;
+        List<StepAction> stepActions = task.getStepData();
+
+//        if (chkActions(stepActions)) {
+//            log.error("存在无效动作");
+//            return -1;
+//        }
+
+        if (taskMapper.insertTask(task) == 0) {
+            log.error("任务添加失败");
+            return -1;
         }
-        List<Integer> actionIds = getActionIds(task.getActionIds());
-        if (actionMapper.queryNumByIds(actionIds) != actionIds.size()) {
-            return 0;
+
+        stepActions.forEach(o -> o.setTaskId(task.getTaskId()));
+        if (taskMapper.insertStep(stepActions) == 0) {
+            log.error("任务关联动作失败");
+            return -1;
         }
-        return taskMapper.insertTask(task);
+        return 1;
     }
 
     @Override
@@ -42,11 +58,30 @@ public class TaskServiceImpl implements TaskService {
         if (Objects.isNull(myTask)) {
             return -1;
         }
-        List<Integer> actionIds = getActionIds(task.getActionIds());
-        if (actionMapper.queryNumByIds(actionIds) != actionIds.size()) {
-            return 0;
+
+        List<StepAction> stepActions = task.getStepData();
+
+        if (chkActions(stepActions)) {
+            log.error("存在无效动作");
+            return -1;
         }
+
+        if (taskMapper.deleteStep(task.getTaskId()) == 0) {
+            return -1;
+        }
+
+        if (taskMapper.insertStep(stepActions) == 0) {
+            return -1;
+        }
+
         return taskMapper.updateTask(task);
+    }
+
+    private boolean chkActions(List<StepAction> stepActions) {
+        List<Integer> actionIds = stepActions.stream().map(StepAction::getActionId).collect(Collectors.toList());
+        List<Action> actionList = actionMapper.queryActionsByIds(actionIds);
+        return !Objects.isNull(actionList) &&
+                actionList.stream().map(Action::getActionId).collect(Collectors.toList()).contains(actionIds);
     }
 
     @Override
@@ -55,6 +90,7 @@ public class TaskServiceImpl implements TaskService {
         if (Objects.isNull(myTask)) {
             return -1;
         }
+        taskMapper.deleteStep(taskId);
         return taskMapper.deleteTask(taskId);
     }
 
@@ -68,54 +104,49 @@ public class TaskServiceImpl implements TaskService {
         return null;
     }
 
-
-
     @Override
     public Task getTaskInfoById(Integer taskId) {
-        Task task = taskMapper.queryTask(taskId);
-        if (Objects.isNull(task)) {
-            return null;
-        }
-//        log.debug(task.toString());
-
-        List<Integer> actionIds = getActionIds(task.getActionIds());
-        List<Action> actionList = actionMapper.queryActionsByIds(actionIds);
-        List<List<Action>> execList = new ArrayList<>();
-        for (List<Integer> ids : getActionArrays(task.getActionIds())) {
-            execList.add(actionList.stream().filter(action -> {
-                return ids.contains(action.getActionId());
-            }).collect(Collectors.toList()));
-//            log.debug(Arrays.toString(execList.get(execList.size()-1).toArray()));
-        }
-
-        task.setActionList(execList);
-        return task;
+        return taskMapper.queryTaskInfo(taskId);
     }
 
-
-    private List<List<Integer>> getActionArrays(String actionIds) {
-        String[] steps = actionIds.split("#");
-        List<List<Integer>> actionList = new ArrayList<>();
-        for (String s : steps) {
-            actionList.add(Arrays.stream(s.split(",")).map(Integer::valueOf).collect(Collectors.toList()));
-        }
-        return actionList;
+    @Override
+    public Task getTaskByAction(Integer actionId) {
+        return taskMapper.queryTaskByAction(actionId);
     }
 
-    private List<Integer> getActionIds(String actionIds) {
-        return getActionArrays(actionIds).stream().flatMap(Collection::stream).collect(Collectors.toList());
-    }
+    @Override
+    public List<List<Action>> getExecStepList(Task taskInfo) {
+         return taskInfo.getActionList().stream().collect(Collectors.groupingBy(Action::getStep))
+                        .entrySet().stream().sorted(Map.Entry.comparingByKey()).map(Map.Entry::getValue)
+                        .collect(Collectors.toList());
 
-    private List<List<Action>> getExecActionList(Task task){
-        List<Integer> actionIds = getActionIds(task.getActionIds());
-        List<Action> actionList = actionMapper.queryActionsByIds(actionIds);
-        List<List<Action>> execList = new ArrayList<>();
-        for (List<Integer> ids : getActionArrays(task.getActionIds())) {
-            execList.add(actionList.stream().filter(action -> {
-                return ids.contains(action.getActionId());
-            }).collect(Collectors.toList()));
-            log.debug(Arrays.toString(execList.get(execList.size()-1).toArray()));
-        }
-        return execList;
     }
+//    private List<List<Integer>> getActionArrays(String actionIds) {
+//        String[] steps = actionIds.split(SysConstants.STEP_DELI);
+//        List<List<Integer>> actionList = new ArrayList<>();
+//        for (String s : steps) {
+//            actionList.add(Arrays.stream(s.split(SysConstants.ACTION_DELI)).map(Integer::valueOf)
+//                    .collect(Collectors.toList()));
+//        }
+//        return actionList;
+//    }
+//
+//    private List<Integer> getActionIds(String actionIdStr) {
+//        return Arrays.stream(actionIdStr.split("[,#]"))
+//                .map(Integer::parseInt).collect(
+//                        Collectors.toList());
+//    }
+//
+//    private List<List<Action>> getExecActionList(Task task) {
+//        List<Integer> actionIds = getActionIds(task.getActionIdStr());
+//        List<Action> actionList = actionMapper.queryActionsByIds(actionIds);
+//        List<List<Action>> execList = new ArrayList<>();
+//        for (List<Integer> ids : getActionArrays(task.getActionIdStr())) {
+//            execList.add(actionList.stream().filter(action -> {
+//                return ids.contains(action.getActionId());
+//            }).collect(Collectors.toList()));
+//            log.debug(Arrays.toString(execList.get(execList.size() - 1).toArray()));
+//        }
+//        return execList;
+//    }
 }

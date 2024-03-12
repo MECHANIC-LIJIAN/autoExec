@@ -13,7 +13,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
 
-@CrossOrigin
 @Slf4j
 @RestController
 @RequestMapping("/api")

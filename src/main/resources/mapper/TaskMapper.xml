@@ -1,18 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.magic.ssh.mapper.TaskMapper">
-    <insert id="insertTask" parameterType="com.magic.ssh.entity.Task">
-        INSERT INTO ssh_task (action_ids,task_name) VALUES (#{actionIds},#{taskName})
+    <insert id="insertTask" parameterType="com.magic.ssh.entity.Task" useGeneratedKeys="true" keyColumn="task_id"
+            keyProperty="taskId">
+        INSERT INTO ssh_task (task_name) VALUES (#{taskName});
+<!--        <selectKey  keyProperty="taskId" order="AFTER" resultType="int">-->
+<!--            select last_insert_rowid()-->
+<!--        </selectKey>-->
     </insert>
-    <insert id="saveUser">
 
-    </insert>
     <update id="updateTask" parameterType="com.magic.ssh.entity.Task">
         UPDATE ssh_task
         <trim prefix="SET" suffixOverrides="," suffix=" WHERE task_id=#{taskId}">
-            <if test="actionIds != null and actionIds.length()>0">  action_ids=#{actionIds}, </if>
-            <if test="remark != null and remark.length()>0">  remark=#{remark}, </if>
-            <if test="taskName != null and remark.length()>0">  task_name=#{taskName}, </if>
+            <if test="remark != null and remark.length()>0">remark=#{remark},</if>
+            <if test="taskName != null and remark.length()>0">task_name=#{taskName},</if>
         </trim>
     </update>
     <delete id="deleteTask">
@@ -22,11 +23,61 @@
     <select id="queryTask" resultType="com.magic.ssh.entity.Task">
         SELECT * FROM ssh_task WHERE (task_id=#{taskId});
     </select>
-    <select id="queryTaskByActions" resultType="com.magic.ssh.entity.Task">
-        SELECT * FROM ssh_task WHERE (action_ids=#{actionIds});
-    </select>
-    <select id="queryTaskByUserId" resultType="com.magic.ssh.entity.Task">
 
+    <resultMap id="taskInfo" type="com.magic.ssh.entity.Task">
+        <id column="task_id" property="taskId" jdbcType="INTEGER"/>
+        <result column="task_name" property="taskName" jdbcType="VARCHAR"/>
+        <collection property="actionList" ofType="com.magic.ssh.entity.Action">
+            <result column="action_id" property="actionId" jdbcType="INTEGER"/>
+            <result column="action_name" property="actionName" jdbcType="VARCHAR"/>
+            <result column="host_id" property="hostId" jdbcType="VARCHAR"/>
+            <result column="cmd" property="cmd" jdbcType="VARCHAR"/>
+            <result column="max_size" property="maxSize" jdbcType="TINYINT"/>
+            <result column="max_second" property="maxSecond" jdbcType="TINYINT"/>
+            <result column="stop_words" property="stopWords" jdbcType="VARCHAR"/>
+            <result column="check_process" property="checkProcess" jdbcType="VARCHAR"/>
+            <result column="step" property="step" jdbcType="VARCHAR"/>
+        </collection>
+    </resultMap>
+
+    <select id="queryTaskInfo" resultMap="taskInfo">
+        SELECT st.*,sa.*,ssa.step FROM ssh_task st
+        LEFT JOIN ssh_step_action ssa ON st.task_id = ssa.task_id
+        LEFT JOIN ssh_action sa ON ssa.action_id = sa.action_id
+        WHERE st.task_id=#{taskId}
+        ORDER BY ssa.step ASC
     </select>
+
+
+    <select id="queryTaskByUserId" resultType="com.magic.ssh.entity.Task">
+        SELECT * FROM ssh_task ORDER BY task_id
+    </select>
+
+    <insert id="insertStep" parameterType="java.util.List">
+        INSERT INTO ssh_step_action (task_id,action_id,step)
+        VALUES
+        <foreach collection="stepActions" item="item" index="index" separator=",">
+            (
+            #{item.taskId},
+            #{item.actionId},
+            #{item.step}
+            )
+        </foreach>
+    </insert>
+
+    <select id="queryStep" resultType="com.magic.ssh.entity.StepAction">
+        SELECT * FROM ssh_step_action WHERE task_id=#{taskId}
+    </select>
+
+    <select id="queryTaskByAction" resultType="com.magic.ssh.entity.Task">
+        SELECT st.* FROM ssh_task st
+        INNER JOIN ssh_step_action ssa ON ssa.task_id = st.task_id
+        AND ssa.action_id = #{actionId}
+        LIMIT 1
+    </select>
+
+    <delete id="deleteStep">
+        DELETE FROM ssh_step_action WHERE task_id=#{taskId}
+    </delete>
 
 </mapper>

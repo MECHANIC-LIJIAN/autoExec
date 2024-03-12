@@ -1,67 +1,76 @@
-  import UserTask from './userTask.js'
-  let actionArr = []
-  $.ajax({
-    type: "get",
-    url: 'http://127.0.0.1:30023/api/action/queryByUser?userId=1',
-    contentType: 'application/json',
-    dataType: 'JSON',
-    async: false,
-    contentType: 'application/json',
-    success: function (data, status) {
-      if (status == "success") {
-        if (data['code'] === 200) {
-          actionArr = data['data']
-        } else {
-          alert(data["msg"])
-        }
+import UserTask from "./userTask.js";
+
+let actionArr = [];
+$.ajax({
+  type: "get",
+  url:
+    "api/task/query?taskId=" +
+    getQueryVariable("taskId"),
+  contentType: "application/json",
+  dataType: "JSON",
+  async: false,
+  contentType: "application/json",
+  success: function (data, status) {
+    if (status == "success") {
+      if (data["code"] === 200) {
+        actionArr = data["data"];
+      } else {
+        alert(data["msg"]);
       }
-    },
-    error: function (xhr, textStatus) {
-      alert(textStatus)
-    },
-    complete: function () {
-
     }
+  },
+  error: function (xhr, textStatus) {
+    alert(textStatus);
+  },
+  complete: function () {},
+});
 
-  });
+LogicFlow.use(Control);
 
-  LogicFlow.use(Menu);
-  LogicFlow.use(Control);
-  LogicFlow.use(DndPanel);
+const lf = new LogicFlow({
+  container: document.querySelector("#container"),
+});
+lf.register(UserTask);
 
-  const lf = new LogicFlow({
-    container: document.querySelector("#container"),
-  });
-  lf.register(UserTask);
+const graphData = {
+  nodes: [
+    {
+      id: "1",
+      type: "rect",
+      x: 100,
+      y: 100,
+      text: "节点1",
+    },
+    {
+      id: "2",
+      type: "circle",
+      x: 100,
+      y: 300,
+      text: "节点2",
+    },{
+      id: "3",
+      type: "circle",
+      x: 100,
+      y: 300,
+      text: "节点2",
+    },
+  ],
+  edges: [
+    {
+      sourceNodeId: "1",
+      targetNodeId: "2",
+      type: "polyline",
+      text: "连线",
+    }, {
+      sourceNodeId: "1",
+      targetNodeId: "3",
+      type: "polyline",
+      text: "连线",
+    },
+  ],
+};
 
-  const graphData = {
-
-  };
-
-
-  const patternItems = []
-  $.each(actionArr, function (k, v) {
-    patternItems.push({
-      type: 'UserTask',
-      label: v.actionName,
-      text: v.actionName,
-      properties: {
-        actionId: v.actionId
-      },
-      icon: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAABMAAAATCAYAAAEFVwZaAAAABGdBTUEAALGPC/xhBQAAAqlJREFUOBF9VM9rE0EUfrMJNUKLihGbpLGtaCOIR8VjQMGDePCgCCIiCNqzCAp2MyYUCXhUtF5E0D+g1t48qAd7CCLqQUQKEWkStcEfVGlLdp/fm3aW2QQdyLzf33zz5m2IsAZ9XhDpyaaIZkTS4ASzK41TFao88GuJ3hsr2pAbipHxuSYyKRugagICGANkfFnNh3HeE2N0b3nN2cgnpcictw5veJIzxmDamSlxxQZicq/mflxhbaH8BLRbuRwNtZp0JAhoplVRUdzmCe/vO27wFuuA3S5qXruGdboy5/PRGFsbFGKo/haRtQHIrM83bVeTrOgNhZReWaYGnE4aUQgTJNvijJFF4jQ8BxJE5xfKatZWmZcTQ+BVgh7s8SgPlCkcec4mGTmieTP4xd7PcpIEg1TX6gdeLW8rTVMVLVvb7ctXoH0Cydl2QOPJBG21STE5OsnbweVYzAnD3A7PVILuY0yiiyDwSm2g441r6rMSgp6iK42yqroI2QoXeJVeA+YeZSa47gZdXaZWQKTrG93rukk/l2Al6Kzh5AZEl7dDQy+JjgFahQjRopSxPbrbvK7GRe9ePWBo1wcU7sYrFZtavXALwGw/7Dnc50urrHJuTPSoO2IMV3gUQGNg87IbSOIY9BpiT9HV7FCZ94nPXb3MSnwHn/FFFE1vG6DTby+r31KAkUktB3Qf6ikUPWxW1BkXSPQeMHHiW0+HAd2GelJsZz1OJegCxqzl+CLVHa/IibuHeJ1HAKzhuDR+ymNaRFM+4jU6UWKXorRmbyqkq/D76FffevwdCp+jN3UAN/C9JRVTDuOxC/oh+EdMnqIOrlYteKSfadVRGLJFJPSB/ti/6K8f0CNymg/iH2gO/f0DwE0yjAFO6l8JaR5j0VPwPwfaYHqOqrCI319WzwhwzNW/aQAAAABJRU5ErkJggg==',
-      className: 'important-node'
-    })
-  })
-  lf.extension.dndPanel.setPatternItems(patternItems);
-
-
-  lf.render(graphData)
-  const { eventCenter } = lf.graphModel;
-
-  eventCenter.on("edge:add", (args) => {
-    console.log("edge:add", args);
-    console.log(lf.getGraphData())
-  });
+lf.render(graphData);
 
 // [
 //     {

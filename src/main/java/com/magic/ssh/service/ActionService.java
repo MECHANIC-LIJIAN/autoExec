@@ -16,5 +16,7 @@ public interface ActionService {
 
     List<Action> getActionByUser(Integer userId);
 
-    Integer saveUser(Integer userId,String actionIds);
+    Action getActionByHost(String hostId);
+
+    Integer saveUser(Integer userId, String actionIds);
 }

@@ -53,6 +53,11 @@ public class ActionServiceImpl implements ActionService {
     }
 
     @Override
+    public Action getActionByHost(String hostId) {
+        return actionMapper.queryActionByHostId(hostId);
+    }
+
+    @Override
     public Integer saveUser(Integer userId, String actionIds) {
         return null;
     }

@@ -44,18 +44,19 @@ public class SSHServiceImpl implements SSHService {
             SSHUtil.getInstance().init(userHost);
             return Boolean.TRUE;
         } catch (JSchException e) {
+            log.error(e.getMessage());
             return Boolean.FALSE;
         }
     }
 
+
     @Override
-    public ActionLog syncExecCmd(Action action, Integer taskLogId, Integer taskStep) {
+    public ActionLog syncExecCmd(Action action) {
 
         ActionLog actionLog = new ActionLog();
-        if (Objects.nonNull(taskLogId) && Objects.nonNull(taskStep)) {
-            log.debug("任务日志编号 {}，执行步数 {}", taskLogId, taskStep);
-            actionLog.setTaskLogId(taskLogId);
-            actionLog.setStep(taskStep);
+
+        if (Objects.nonNull(action)) {
+            log.debug("执行动作名 {}", action.getActionName());
         }
 
         log.debug("input: {}", action);
@@ -100,8 +101,8 @@ public class SSHServiceImpl implements SSHService {
                 String checkCmd = String.format("ps -aux |grep -v 'grep' | grep -i %s", queryAction.getCheckProcess());
                 ExecLog checkLog = SSHUtil.getInstance()
                         .executeCommand(serverKey, checkCmd, executeCommon);
-                if (Objects.equals(checkLog.getExitStatus(),
-                        StatusConstants.EXIT_SUCCESS) && StringUtils.hasText(checkLog.getExecRes())) {
+
+                if (StringUtils.hasText(checkLog.getExecRes())) {
                     actionLog.setCheckRes(StatusConstants.CHECK_SUCCESS);
                 } else {
                     actionLog.setCheckRes(StatusConstants.CHECK_ERROR);
@@ -116,25 +117,17 @@ public class SSHServiceImpl implements SSHService {
             buildErrLog(actionLog, ResultCode.JSCH_CONNECT_ERROR.getMessage());
         } finally {
             //执行后记录日志
-            Integer update = actionLogService.insertActionLog(actionLog);
             log.debug(actionLog.toString());
+            Integer update = actionLogService.insertActionLog(actionLog);
         }
         return actionLog;
     }
 
-    @Override
-    public ActionLog syncExecCmd(Action action) {
-        return syncExecCmd(action, null, null);
-    }
+
 
     @Override
     public CompletableFuture<ActionLog> asyncExecCmd(Action action) {
-        return CompletableFuture.completedFuture(syncExecCmd(action, null, null));
-    }
-
-    @Override
-    public CompletableFuture<ActionLog> asyncExecCmd(Action action, Integer taskLogId, Integer taskStep) {
-        return CompletableFuture.completedFuture(syncExecCmd(action, taskLogId, taskStep));
+        return CompletableFuture.completedFuture(syncExecCmd(action));
     }
 
     private void buildErrLog(ActionLog actionLog, String reason) {

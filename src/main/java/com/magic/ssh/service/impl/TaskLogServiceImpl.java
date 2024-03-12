@@ -1,27 +1,22 @@
 package com.magic.ssh.service.impl;
 
-import com.magic.ssh.entity.ActionLog;
 import com.magic.ssh.entity.TaskLog;
-import com.magic.ssh.entity.TaskLogDetail;
+import com.magic.ssh.entity.StepLog;
 import com.magic.ssh.mapper.TaskLogMapper;
-import com.magic.ssh.service.ActionLogService;
 import com.magic.ssh.service.TaskLogService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 public class TaskLogServiceImpl implements TaskLogService {
     private final TaskLogMapper taskLogMapper;
 
-    private final ActionLogService actionLogService;
-
-    public TaskLogServiceImpl(TaskLogMapper taskLogMapper, ActionLogService actionLogService) {
+    public TaskLogServiceImpl(TaskLogMapper taskLogMapper) {
         this.taskLogMapper = taskLogMapper;
-        this.actionLogService = actionLogService;
     }
 
     @Override
@@ -30,21 +25,28 @@ public class TaskLogServiceImpl implements TaskLogService {
     }
 
     @Override
-    public TaskLogDetail getTaskLogDetail(Integer taskLogId) {
-        TaskLog taskLog = taskLogMapper.queryTaskLog(taskLogId);
-        if (Objects.isNull(taskLog)) {
-            return null;
-        }
-        List<ActionLog> actionLogs = actionLogService.getLogByTaskLogId(taskLogId);
-
-//        List<List<ActionLog>> sortedList = new ArrayList<>();
-//        actionLogs.stream().collect(Collectors.groupingBy(ActionLog::getStep)).forEach(sortedList::add);
-        return new TaskLogDetail(taskLog, actionLogs);
+    public TaskLog getTaskLogDetail(Integer taskLogId) {
+        return taskLogMapper.queryLogByTaskLogId(taskLogId);
     }
 
     @Override
     public Integer insertTaskLog(TaskLog taskLog) {
         return taskLogMapper.insertTaskLog(taskLog);
+    }
+
+    @Override
+    public Integer insertStepLog(List<StepLog> stepLogs) {
+        return taskLogMapper.insertStepLog(stepLogs);
+    }
+
+    @Override
+    public List<StepLog> getTaskStepLogId(Integer taskLogId) {
+        return taskLogMapper.queryRelationList(taskLogId);
+    }
+
+    @Override
+    public Integer deleteStepLog(List<Integer> actionLogIds) {
+        return taskLogMapper.deleteStepLog(actionLogIds);
     }
 
     @Override

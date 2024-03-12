@@ -31,3 +31,6 @@ build/
 
 ### VS Code ###
 .vscode/
+/ssh.db
+/ssh.db-shm
+/ssh.db-wal

@@ -8,6 +8,8 @@ public enum ResultCode {
     OP_ERROR(400, "操作失败"),
     UNAUTHORIZED(401,"无权访问该资源"),
 
+    RESOURCE_NOT_EXIST(1404,"资源不存在"),
+
     /* 参数错误 */
     PARAM_IS_INVALID(1001, "参数无效"),
     PARAM_IS_BLANK(1002, "参数为空"),
