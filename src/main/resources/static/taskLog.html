@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>执行任务</title>
+    <link rel="stylesheet" href="libs/bootstrap/bootstrap-reboot.min.css">
+
+    <link rel="stylesheet" href="libs/bootstrap/bootstrap.css">
+
+    <link rel="stylesheet" href="libs/bootstrap/extensions/bootstrap-table.min.css">
+    <link rel="stylesheet" href="libs/fa/all.css">
+
+<body>
+    <div class="container">
+        <div class="row justify-content-center" id="finish" style="display: none;">
+            <div class="col-4 alert alert-primary" role="alert" style="text-align: center;">
+                <h5>任务已经执行完毕</h5>
+            </div>
+        </div>
+
+        <div class="row">
+            <div id="toolbar" class="btn-group">
+                <!-- <button id="btn_exec" type="button" class="btn btn-success">
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>执行</span>
+                    </button> -->
+                <button id="btn_reExec" type="button" class="btn btn-warning" style="display: none;">
+                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>继续执行</span>
+                </button>
+            </div>
+            <div class="col-sm-12">
+                <table id="tb_log" data-auto-refresh="true" data-auto-refresh-interval="3"></table>
+            </div>
+        </div>
+    </div>
+
+</body>
+<script src="libs/jq/jquery-3.7.1.min.js"></script>
+
+<script src="libs/bootstrap/bootstrap.js"></script>
+
+<script src="libs/bootstrap/extensions/bootstrap-table.min.js"></script>
+<script src="libs/bootstrap/extensions/bootstrap-table-auto-refresh.js"></script>
+
+<script src="libs/fa/all.js"></script>
+<script src="js/util.js"></script>
+<script>
+    $(function () {
+
+        //1.初始化Table
+        var oTable = new TableInit();
+        oTable.Init();
+        const tableObj = $('#tb_log');
+
+        const taskLogId = getQueryVariable("taskLogId")
+        tableObj.bootstrapTable('refreshOptions', { url: 'api/taskLog?taskLogId=' + taskLogId });
+
+        $("#btn_exec").click(function () {
+            tableObj.bootstrapTable('removeAll');
+            $.ajax({
+                type: "post",
+                url: "api/execTask",
+                data: JSON.stringify({
+                    taskId: taskId
+                }),
+                contentType: 'application/json',
+                dataType: 'JSON',
+                success: function (data, status) {
+                    if (data['code'] === 200) {
+                            tableObj.bootstrapTable('refresh');
+                    } else {
+                        alert("执行失败")
+                    }
+                },
+                error: function () {
+                    alert(data["msg"]);
+                },
+                complete: function () {
+
+                }
+
+            });
+        });
+        $("#btn_reExec").click(function () {
+            $.ajax({
+                type: "post",
+                url: "api/reExecTask",
+                data: JSON.stringify({
+                    taskLogId
+                }),
+                contentType: 'application/json',
+                dataType: 'JSON',
+                success: function (data, status) {
+                    if (data['code'] === 200) {
+                        $('#tb_log').bootstrapTable('refreshOptions', { autoRefresh: true });
+                    } else {
+                        alert("执行失败")
+                    }
+                },
+                error: function () {
+                    alert("请求失败");
+                },
+                complete: function () {
+
+                }
+
+            });
+        });
+    });
+
+    var TableInit = function () {
+        var oTableInit = new Object();
+        //初始化Table
+        oTableInit.Init = function () {
+            $('#tb_log').bootstrapTable({
+                url: '',         //请求后台的URL（*）
+                method: 'get',                      //请求方式（*）
+                dataType: 'json',
+                toolbar: '#toolbar',                //工具按钮用哪个容器
+                theadClasses: '.thead-light',
+                cache: false,                       //是否使用缓存，默认为true，所以一般情况下需要设置一下这个属性（*）
+                // pagination: true,                   //是否显示分页（*）
+                showPaginationSwitch: false,        //是否显示分页数
+                sortable: false,                     //是否启用排序
+                sortName: "step",                     //是否启用排序
+                sortOrder: "desc",                   //排序方式
+                search: false,                       //是否显示表格搜索，此搜索是客户端搜索，不会进服务端，所以，个人感觉意义不大
+                strictSearch: true,
+                showRefresh: true,                  //是否显示刷新按钮
+                height: $(window).height() - 50,   //table总高，如果没有设置height属性，表格自动根据记录条数觉得表格高度
+                uniqueId: "actionLogId",                     //每一行的唯一标识，一般为主键列
+                showHeader: true,
+                columns: [
+                    { field: 'step', title: '步数' },
+                    {
+                        field: 'actionName',
+                        title: '动作名'
+                    }, {
+                        field: 'execRes',
+                        title: '执行输出'
+                    }, {
+                        field: 'exitStatus',
+                        title: '退出码',
+                        align: 'center'
+                    },
+                     {
+                        field: 'startTime',
+                        title: '开始时间',
+                        formatter: function (val, row, index) {
+                            return val == null ? "" : timestampToTime(val);
+                        }
+                    }, {
+                        field: 'endTime',
+                        title: '结束时间',
+                        formatter: function (val, row, index) {
+                            return val == null ? "" : timestampToTime(val);
+                        }
+                    },
+                    {
+                        field: 'reason',
+                        title: '错误原因',
+                        align: 'center'
+                    },],
+                responseHandler: function (res) {
+                    //动态渲染表格之前获取有后台传递的数据时,用于获取出除去本身渲染所需的数据的额外参数
+                    //详见此函数参数的api
+                    const data = res['data']
+                    if (data === null) {
+                        return []
+                    }
+                    if (data['status'] === 9) {
+                        $('#finish').show()
+                        $('#btn_reExec').hide()
+
+                    }
+                    if (data['status'] === 3) {
+                        $('#btn_reExec').show()
+                    }
+                    return data['actionLogs']
+                },
+
+            });
+        };
+
+        return oTableInit;
+    };
+
+</script>
+
+</html>

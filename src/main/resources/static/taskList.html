@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>任务列表</title>
+
+    <link rel="stylesheet" href="libs/bootstrap/bootstrap.css">
+    <link rel="stylesheet" href="libs/bootstrap/extensions/bootstrap-table.min.css">
+    <link rel="stylesheet" href="libs/fa/all.css">
+
+</head>
+
+<body>
+<div class="container">
+    <div class="row">
+        <div class="col-12">
+            <nav aria-label="breadcrumb">
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">主页</a></li>
+                    <li class="breadcrumb-item active" aria-current="page">任务列表</li>
+                </ol>
+            </nav>
+        </div>
+
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <div id="toolbar" class="btn-group">
+                <button id="btn_add" type="button" class="btn btn-success">
+                    <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>新增
+                </button>
+            </div>
+        </div>
+
+    </div>
+    <div class="row">
+        <div class="col-sm-12">
+            <table id="tb_taskList"></table>
+        </div>
+    </div>
+</div>
+
+</body>
+<script src="libs/jq/jquery-3.7.1.min.js"></script>
+
+<script src="libs/bootstrap/bootstrap.js"></script>
+<script src="libs/bootstrap/extensions/bootstrap-table.min.js"></script>
+<script src="libs/fa/all.js"></script>
+<script src="js/util.js"></script>
+
+<script>
+    $(function () {
+
+        //1.初始化Table
+        var oTable = new TableInit();
+        oTable.Init();
+
+    });
+
+    var TableInit = function () {
+        var oTableInit = new Object();
+        //初始化Table
+        oTableInit.Init = function () {
+            $('#tb_taskList').bootstrapTable({
+                url: 'api/task/queryByUser?userId=1',         //请求后台的URL（*）
+                method: 'get',                      //请求方式（*）
+                dataType: 'json',
+                toolbar: '#toolbar',
+                theadClasses: '.thead-light',
+                cache: false,                       //是否使用缓存，默认为true，所以一般情况下需要设置一下这个属性（*）
+                pagination: true,                   //是否显示分页（*）
+                showPaginationSwitch: false,        //是否显示分页数
+                sortable: false,                     //是否启用排序
+                search: false,                       //是否显示表格搜索，此搜索是客户端搜索，不会进服务端，所以，个人感觉意义不大
+                strictSearch: true,
+                showRefresh: true,                  //是否显示刷新按钮
+                clickToSelect: true,                //是否启用点击选中行
+                singleSelect: false,                 //是否单选模式
+                height: $(window).height() - 100,   //table总高，如果没有设置height属性，表格自动根据记录条数觉得表格高度
+                clickToSelect: true,                //是否启用点击选中行
+
+                columns: [
+                    {
+                        field: 'taskName',
+                        title: '任务名'
+                    }, {
+                        field: 'Button', title: "操作", align: 'center', events: operateEvents, formatter: function (value, row, index) {
+                            var del = '<button   id="btn_delete" type="button" class="btn btn-danger delete">删除</button>\
+                            <button type="button" id="btn_exec" class="btn btn-info">执行</button>'
+                            return del;
+                        }
+                    }
+                ],
+                responseHandler: function (res) {
+                    return res['data'];
+                },
+
+            });
+        };
+
+        return oTableInit;
+    };
+    window.operateEvents = {
+        'click #btn_exec': function (e, value, row, index) {
+            $.ajax({
+                type: "post",
+                url: "api/execTask",
+                data: JSON.stringify({
+                    taskId: row.taskId
+                }),
+                contentType: 'application/json',
+                dataType: 'JSON',
+                success: function (data, status) {
+                    if (data['code'] === 200) {
+                        window.open("taskLog.html?taskLogId="+ data['data']['taskLogId'])
+                    } else {
+                        alert("执行失败")
+                    }
+                },
+                error: function () {
+                    alert(data["msg"]);
+                },
+                complete: function () {
+
+                }
+
+            });
+
+        },
+        'click #btn_delete': function (e, value, row, index) {
+            if (!window.confirm("确定删除吗？")) {
+                return;
+            }
+
+            $.ajax({
+                type: "post",
+                url: "api/task/delete",
+                data: JSON.stringify(row),
+                contentType: 'application/json',
+                dataType: 'JSON',
+                success: function (data, status) {
+                    if (status == "success") {
+                        $("#tb_taskList").bootstrapTable('refresh');
+                    }
+                },
+                error: function () {
+                    alert(data["msg"]);
+                },
+                complete: function () {
+
+                }
+
+            });
+        }
+    };
+
+    $("#btn_add").click(function () {
+        window.open("/taskEdit.html")
+    });
+
+</script>
+
+</html>
