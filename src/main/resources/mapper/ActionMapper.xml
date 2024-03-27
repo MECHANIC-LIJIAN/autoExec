@@ -26,6 +26,10 @@
         SELECT * FROM ssh_action WHERE action_id=#{actionId}
     </select>
 
+    <select id="queryActionByName" resultType="com.magic.ssh.entity.Action">
+        SELECT * FROM ssh_action WHERE action_name=#{actionName}
+    </select>
+
     <select id="queryActionByHostId" resultType="com.magic.ssh.entity.Action">
         SELECT * FROM ssh_action WHERE host_id=#{hostId} LIMIT 1
     </select>

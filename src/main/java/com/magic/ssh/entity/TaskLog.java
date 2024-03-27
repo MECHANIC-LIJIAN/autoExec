@@ -9,9 +9,12 @@ public class TaskLog {
 
     private Integer taskLogId;
     private Integer taskId;
+    private String taskName;
 
     private Long startTime;
     private Long endTime;
+    private Long cost;
+
     private Integer status;
     private String reason;
     private Integer curStep;

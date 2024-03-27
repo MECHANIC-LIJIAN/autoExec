@@ -10,6 +10,8 @@ public interface ActionMapper {
 
     Action queryAction(Integer actionId);
 
+    Action queryActionByName(String actionName);
+
     Action queryActionByHostId(String hostId);
 
     Integer insertAction(Action action);

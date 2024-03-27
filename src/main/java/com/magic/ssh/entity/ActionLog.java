@@ -10,6 +10,7 @@ public class ActionLog {
     private Integer actionId;
     private Long startTime;
     private Long endTime;
+    private Long cost;
     private String execRes;
     private Integer exitStatus;
     private Integer status;

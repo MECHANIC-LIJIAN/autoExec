@@ -8,6 +8,8 @@ import java.util.List;
 public interface ActionService {
     Action getActionInfoById(Integer actionId);
 
+    Action getActionByName(String actionName);
+
     Integer insertAction(Action action);
 
     Integer updateAction(Action action);

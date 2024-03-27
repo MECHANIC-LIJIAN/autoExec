@@ -49,17 +49,17 @@ public class SSHServiceImpl implements SSHService {
         }
     }
 
-
     @Override
     public ActionLog syncExecCmd(Action action) {
 
         ActionLog actionLog = new ActionLog();
+        actionLog.setStartTime(System.currentTimeMillis());
 
         if (Objects.nonNull(action)) {
             log.debug("执行动作名 {}", action.getActionName());
         }
 
-        log.debug("input: {}", action);
+//        log.debug("input: {}", action);
         Action queryAction;
         if (StringUtils.hasText(action.getHostId()) && StringUtils.hasText(action.getCmd())) {
             queryAction = action;
@@ -72,16 +72,18 @@ public class SSHServiceImpl implements SSHService {
             buildErrLog(actionLog, ResultCode.ACTION_NOT_EXIST.getMessage());
             return actionLog;
         }
-        log.debug("queryAction: {}", queryAction);
+        log.debug("queryAction: {}", queryAction.getActionName());
 
-        Host queryHost = hostService.getHostInfoById(queryAction.getHostId());
+        Host queryHost = hostService.getHostById(queryAction.getHostId());
         if (Objects.isNull(queryHost)) {
             buildErrLog(actionLog, ResultCode.SERVER_NOT_EXIST.getMessage());
             return actionLog;
         }
-        log.debug("queryHost: {}", queryHost);
+        log.debug("queryHost: {}", queryHost.getHostname());
 
         actionLog.setActionId(queryAction.getActionId());
+        actionLog.setActionName(queryAction.getActionName());
+        actionLog.setStep(queryAction.getStep());
 
         String serverKey = queryAction.getHostId();
         try {
@@ -116,14 +118,14 @@ public class SSHServiceImpl implements SSHService {
             log.error(e.getMessage());
             buildErrLog(actionLog, ResultCode.JSCH_CONNECT_ERROR.getMessage());
         } finally {
+            actionLog.setEndTime(System.currentTimeMillis());
             //执行后记录日志
-            log.debug(actionLog.toString());
-            Integer update = actionLogService.insertActionLog(actionLog);
+            log.debug("action {} cost: {}ms", actionLog.getActionName(),
+                    actionLog.getEndTime() - actionLog.getStartTime());
+            actionLogService.insertActionLog(actionLog);
         }
         return actionLog;
     }
-
-
 
     @Override
     public CompletableFuture<ActionLog> asyncExecCmd(Action action) {
@@ -141,8 +143,6 @@ public class SSHServiceImpl implements SSHService {
     private void extractExecLog(ActionLog actionLog, ExecLog execLog) {
         actionLog.setExecRes(execLog.getExecRes());
         actionLog.setExitStatus(execLog.getExitStatus());
-        actionLog.setStartTime(execLog.getStartTime());
-        actionLog.setEndTime(execLog.getEndTime());
         if (Objects.equals(actionLog.getExitStatus(), StatusConstants.EXIT_SUCCESS)
                 | Objects.equals(actionLog.getExitStatus(), StatusConstants.EXIT_SUCCESS_TAIL)
         ) {

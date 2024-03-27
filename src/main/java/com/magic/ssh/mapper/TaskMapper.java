@@ -15,6 +15,8 @@ public interface TaskMapper {
 
     Integer insertTask(Task task);
 
+    Task queryTaskByName(String taskName);
+
 
     Integer updateTask(Task task);
 

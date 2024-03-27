@@ -47,12 +47,17 @@ public class SSHUtil {
         return result;
     }
 
-    public static String getServerKey(Host host) throws UnknownHostException {
+    public static String getServerKey(Host host) {
         return getServerKey(host.getIpAddress(), host.getUsername());
     }
 
-    public static String getServerKey(String ipAddress, String username) throws UnknownHostException {
-        InetAddress inetAddress = InetAddress.getByName(ipAddress);
+    public static String getServerKey(String ipAddress, String username) {
+        InetAddress inetAddress = null;
+        try {
+            inetAddress = InetAddress.getByName(ipAddress);
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
         long ipInt = ipToInteger(inetAddress);
         return String.join("_", ipAddress, username);
     }
@@ -98,7 +103,8 @@ public class SSHUtil {
             InputStream in = channelExec.getInputStream();
             InputStream err = channelExec.getErrStream();
 
-            cmd = cmd.trim() + " 2>&1";
+            cmd = "source .bash_profile && " + cmd.trim() + " 2>&1";
+            log.debug("exec command: {}", cmd);
             channelExec.setCommand(cmd);
             //建立连接，命令自动执行
             channelExec.connect();
@@ -137,8 +143,9 @@ public class SSHUtil {
             execLog.setExecRes(String.join("<br>", resultLines));
             //记录执行结束始时间
             execLog.setEndTime(System.currentTimeMillis());
-            log.trace("{} -> '{}' exec success", session.getHost(), cmd);
-//            log.debug(execLog.toString());
+            log.debug("{} -> '{}' exec success, cost {}ms", session.getHost(), cmd,
+                    execLog.getEndTime() - execLog.getStartTime());
+
             in.close();
             err.close();
 
@@ -162,7 +169,7 @@ public class SSHUtil {
     }
 
     public void close(String hostKey) {
-        if (sessionPools.containsKey(hostKey)){
+        if (sessionPools.containsKey(hostKey)) {
             sessionPools.get(hostKey).disconnect();
             sessionPools.remove(hostKey);
         }

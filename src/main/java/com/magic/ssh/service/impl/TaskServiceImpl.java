@@ -1,5 +1,6 @@
 package com.magic.ssh.service.impl;
 
+import com.magic.ssh.SysConstants;
 import com.magic.ssh.entity.Action;
 import com.magic.ssh.entity.StepAction;
 import com.magic.ssh.entity.Task;
@@ -8,6 +9,7 @@ import com.magic.ssh.mapper.TaskMapper;
 import com.magic.ssh.service.TaskService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -30,48 +32,55 @@ public class TaskServiceImpl implements TaskService {
         return taskMapper.queryTask(taskId);
     }
 
+    @Transactional
     @Override
     public Integer insertTask(Task task) {
-        List<StepAction> stepActions = task.getStepData();
 
-//        if (chkActions(stepActions)) {
-//            log.error("存在无效动作");
-//            return -1;
-//        }
-
-        if (taskMapper.insertTask(task) == 0) {
-            log.error("任务添加失败");
-            return -1;
-        }
-
-        stepActions.forEach(o -> o.setTaskId(task.getTaskId()));
-        if (taskMapper.insertStep(stepActions) == 0) {
-            log.error("任务关联动作失败");
-            return -1;
-        }
-        return 1;
-    }
-
-    @Override
-    public Integer updateTask(Task task) {
-        Task myTask = taskMapper.queryTask(task.getTaskId());
-        if (Objects.isNull(myTask)) {
-            return -1;
+        Task task1 = taskMapper.queryTaskByName(task.getTaskName());
+        if (Objects.nonNull(task1)){
+            return SysConstants.RESOURCE_DP;
         }
 
         List<StepAction> stepActions = task.getStepData();
 
         if (chkActions(stepActions)) {
             log.error("存在无效动作");
-            return -1;
+            return SysConstants.OP_ERROR;
+        }
+
+        if (taskMapper.insertTask(task) == 0) {
+            log.error("任务添加失败");
+            return SysConstants.OP_ERROR;
+        }
+
+        stepActions.forEach(o -> o.setTaskId(task.getTaskId()));
+        if (taskMapper.insertStep(stepActions) == 0) {
+            log.error("任务关联动作失败");
+            return SysConstants.OP_ERROR;
+        }
+        return SysConstants.OP_SUCCESS;
+    }
+
+    @Override
+    public Integer updateTask(Task task) {
+        Task myTask = taskMapper.queryTask(task.getTaskId());
+        if (Objects.isNull(myTask)) {
+            return SysConstants.OP_ERROR;
+        }
+
+        List<StepAction> stepActions = task.getStepData();
+
+        if (chkActions(stepActions)) {
+            log.error("存在无效动作");
+            return SysConstants.OP_ERROR;
         }
 
         if (taskMapper.deleteStep(task.getTaskId()) == 0) {
-            return -1;
+            return SysConstants.OP_ERROR;
         }
 
         if (taskMapper.insertStep(stepActions) == 0) {
-            return -1;
+            return SysConstants.OP_ERROR;
         }
 
         return taskMapper.updateTask(task);
@@ -88,7 +97,7 @@ public class TaskServiceImpl implements TaskService {
     public Integer deleteTask(Integer taskId) {
         Task myTask = taskMapper.queryTask(taskId);
         if (Objects.isNull(myTask)) {
-            return -1;
+            return SysConstants.OP_ERROR;
         }
         taskMapper.deleteStep(taskId);
         return taskMapper.deleteTask(taskId);
@@ -116,6 +125,7 @@ public class TaskServiceImpl implements TaskService {
 
     @Override
     public List<List<Action>> getExecStepList(Task taskInfo) {
+//        log.debug(Arrays.toString(taskInfo.getActionList().toArray()));
          return taskInfo.getActionList().stream().collect(Collectors.groupingBy(Action::getStep))
                         .entrySet().stream().sorted(Map.Entry.comparingByKey()).map(Map.Entry::getValue)
                         .collect(Collectors.toList());

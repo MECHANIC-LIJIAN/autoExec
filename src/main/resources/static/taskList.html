@@ -82,13 +82,15 @@
                 clickToSelect: true,                //是否启用点击选中行
 
                 columns: [
+                    {filed:"taskId",visible:false},
                     {
                         field: 'taskName',
                         title: '任务名'
                     }, {
                         field: 'Button', title: "操作", align: 'center', events: operateEvents, formatter: function (value, row, index) {
-                            var del = '<button   id="btn_delete" type="button" class="btn btn-danger delete">删除</button>\
-                            <button type="button" id="btn_exec" class="btn btn-info">执行</button>'
+                            var del = '<button  id="btn_info" type="button" class="btn btn-info">详情</button>\
+                            <button   id="btn_delete" type="button" class="btn btn-danger">删除</button>\
+                            <button id="btn_exec" type="button" class="btn btn-success">执行</button>'
                             return del;
                         }
                     }
@@ -153,6 +155,9 @@
                 }
 
             });
+        },
+        'click #btn_info': function (e, value, row, index) {
+            window.open("taskInfo.html?taskId="+row.taskId)
         }
     };
 

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>任务详情</title>
+  <link rel="stylesheet" href="libs/bootstrap/bootstrap-reboot.min.css">
+
+  <link rel="stylesheet" href="libs/bootstrap/bootstrap.css">
+
+  <link rel="stylesheet" href="libs/bootstrap/extensions/bootstrap-table.min.css">
+  <link rel="stylesheet" href="libs/fa/all.css">
+
+<body>
+  <div class="container">
+    <div class="row">
+      <div id="toolbar" class="btn-group">
+        <!-- <button id="btn_exec" type="button" class="btn btn-success">
+              <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>执行</span>
+          </button> -->
+      </div>
+      <div class="col-sm-12">
+        <table id="tb_info"></table>
+      </div>
+    </div>
+  </div>
+
+</body>
+<script src="libs/jq/jquery-3.7.1.min.js"></script>
+
+<script src="libs/bootstrap/bootstrap.js"></script>
+
+<script src="libs/bootstrap/extensions/bootstrap-table.min.js"></script>
+
+<script src="libs/fa/all.js"></script>
+<script src="js/util.js"></script>
+<script>
+  $(function () {
+
+    //1.初始化Table
+    var oTable = new TableInit();
+    oTable.Init();
+    const tableObj = $('#tb_info');
+
+    const taskId = getQueryVariable("taskId")
+    tableObj.bootstrapTable('refreshOptions', { url: 'api/task/query?taskId=' + taskId });
+
+  });
+
+  var TableInit = function () {
+    var oTableInit = new Object();
+    //初始化Table
+    oTableInit.Init = function () {
+      $('#tb_info').bootstrapTable({
+        url: '',         //请求后台的URL（*）
+        method: 'get',                      //请求方式（*）
+        dataType: 'json',
+        toolbar: '#toolbar',                //工具按钮用哪个容器
+        theadClasses: '.thead-light',
+        cache: false,                       //是否使用缓存，默认为true，所以一般情况下需要设置一下这个属性（*）
+        // pagination: true,                   //是否显示分页（*）
+        showPaginationSwitch: false,        //是否显示分页数
+        sortable: false,                     //是否启用排序
+        sortName: "step",                     //是否启用排序
+        sortOrder: "desc",                   //排序方式
+        search: false,                       //是否显示表格搜索，此搜索是客户端搜索，不会进服务端，所以，个人感觉意义不大
+        showRefresh: false,                  //是否显示刷新按钮
+        height: $(window).height() - 50,   //table总高，如果没有设置height属性，表格自动根据记录条数觉得表格高度
+        showHeader: true,
+        columns: [
+          { field: 'step', title: '步数' },
+          { field: 'actionName', title: '动作名' },
+        ],
+        responseHandler: function (res) {
+          return res['data']
+        },
+
+      });
+    };
+
+    return oTableInit;
+  };
+
+</script>
+
+</html>

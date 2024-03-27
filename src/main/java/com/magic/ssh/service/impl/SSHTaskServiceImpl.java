@@ -45,9 +45,10 @@ public class SSHTaskServiceImpl implements SSHTaskService {
 
         TaskLog taskLog = new TaskLog();
         taskLog.setTaskId(task.getTaskId());
-        taskLog.setStartTime(System.currentTimeMillis());
+        taskLog.setTaskName(taskInfo.getTaskName());
         taskLog.setStatus(StatusConstants.TASK_READY);
         taskLog.setCurStep(firstStep);
+        taskLog.setStartTime(System.currentTimeMillis());
 
         taskLogService.insertTaskLog(taskLog);
 
@@ -56,6 +57,7 @@ public class SSHTaskServiceImpl implements SSHTaskService {
         return taskLog;
     }
 
+    @Transactional
     @Override
     public TaskLog reExecTask(TaskLog taskLog) {
         TaskLog queryLog = taskLogService.getTaskLogDetail(taskLog.getTaskLogId());
@@ -81,7 +83,7 @@ public class SSHTaskServiceImpl implements SSHTaskService {
         log.debug("任务的总步数 {}，出错的步：{}，重新执行步数 {}", execStepList.size(), queryLog.getCurStep(),
                 needExecList.size());
 
-        log.debug(queryLog.toString());
+        log.debug("task {}, cur step {}",queryLog.getTaskName(),queryLog.getCurStep());
         List<ActionLog> stepActionLogs = queryLog.getActionLogs();
 
         List<Integer> needDel =

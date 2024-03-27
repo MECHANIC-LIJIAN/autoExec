@@ -13,18 +13,15 @@
     <link rel="stylesheet" href="libs/fa/all.css">
 
 <body>
-    <div class="container">
-        <div class="row justify-content-center" id="finish" style="display: none;">
-            <div class="col-4 alert alert-primary" role="alert" style="text-align: center;">
-                <h5>任务已经执行完毕</h5>
-            </div>
-        </div>
-
+    <div class="container-fluid">
         <div class="row">
             <div id="toolbar" class="btn-group">
                 <!-- <button id="btn_exec" type="button" class="btn btn-success">
                         <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>执行</span>
                     </button> -->
+                <div id="finish" role="alert" style="text-align: center;">
+                    <p>任务已经执行完毕</p>
+                </div>
                 <button id="btn_reExec" type="button" class="btn btn-warning" style="display: none;">
                     <span class="glyphicon glyphicon-plus" aria-hidden="true"></span>继续执行</span>
                 </button>
@@ -33,6 +30,8 @@
                 <table id="tb_log" data-auto-refresh="true" data-auto-refresh-interval="3"></table>
             </div>
         </div>
+
+
     </div>
 
 </body>
@@ -138,7 +137,8 @@
                         title: '动作名'
                     }, {
                         field: 'execRes',
-                        title: '执行输出'
+                        title: '执行输出',
+
                     }, {
                         field: 'exitStatus',
                         title: '退出码',
@@ -163,8 +163,6 @@
                         align: 'center'
                     },],
                 responseHandler: function (res) {
-                    //动态渲染表格之前获取有后台传递的数据时,用于获取出除去本身渲染所需的数据的额外参数
-                    //详见此函数参数的api
                     const data = res['data']
                     if (data === null) {
                         return []
@@ -172,7 +170,6 @@
                     if (data['status'] === 9) {
                         $('#finish').show()
                         $('#btn_reExec').hide()
-
                     }
                     if (data['status'] === 3) {
                         $('#btn_reExec').show()

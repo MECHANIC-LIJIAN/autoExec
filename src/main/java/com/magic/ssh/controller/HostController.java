@@ -1,5 +1,7 @@
 package com.magic.ssh.controller;
 
+import com.alibaba.excel.EasyExcel;
+import com.magic.ssh.SysConstants;
 import com.magic.ssh.entity.Action;
 import com.magic.ssh.entity.Host;
 import com.magic.ssh.service.ActionService;
@@ -8,11 +10,11 @@ import com.magic.ssh.util.Result;
 import com.magic.ssh.util.ResultCode;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
-import javax.validation.constraints.Null;
+import java.io.IOException;
 import java.net.UnknownHostException;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 
 @RestController
 @RequestMapping("/api/host")
@@ -29,7 +31,7 @@ public class HostController {
 
     @GetMapping("/query")
     public Result guery(@RequestParam String hostId) {
-        Host host = hostService.getHostInfoById(hostId);
+        Host host = hostService.getHostById(hostId);
         if (Objects.isNull(host)) {
             return Result.build(ResultCode.RESOURCE_NOT_EXIST);
         } else {
@@ -40,7 +42,7 @@ public class HostController {
 
     @GetMapping("/queryByUser")
     public Result gueryRoles(@RequestParam Integer userId) {
-        return  Result.success(hostService.getHostByUser(userId));
+        return Result.success(hostService.getHostByUser(userId));
     }
 
     @PostMapping("/add")
@@ -88,6 +90,36 @@ public class HostController {
         } else {
             return Result.build(ResultCode.OP_ERROR);
         }
+    }
+
+
+
+    @PostMapping("/import")
+    public Result importExcel(@RequestParam("file") MultipartFile excel) {
+        try {
+            List<Host> hostList = EasyExcel.read(excel.getInputStream())
+                    .head(Host.class)
+                    .sheet()
+                    .doReadSync();
+            for (Host host : hostList) {
+                if (!host.importChk()){
+                    return Result.build(ResultCode.OP_ERROR,"存在空缺数据行",host);
+                }
+            }
+
+            for (Host host : hostList) {
+                int ret = hostService.insertHost(host);
+                if (ret== SysConstants.RESOURCE_DP) {
+                    String errMsg = String.format( "主机名【%s】已存在 或者 主机【%s/%s】已存在",host.getHostname(),host.getIpAddress(),
+                            host.getUsername() );
+                    return Result.build(ResultCode.OP_ERROR,errMsg, "");
+                }
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return Result.success("上传成功");
     }
 
 }

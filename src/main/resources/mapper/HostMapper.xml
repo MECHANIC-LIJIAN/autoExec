@@ -27,6 +27,9 @@
     <select id="queryHost" resultType="com.magic.ssh.entity.Host">
         SELECT * FROM ssh_host WHERE (host_id=#{hostId});
     </select>
+    <select id="queryHostByName" resultType="com.magic.ssh.entity.Host">
+        SELECT * FROM ssh_host WHERE (hostname=#{hostName});
+    </select>
     <select id="getHostByUserId" resultType="com.magic.ssh.entity.Host">
         SELECT * FROM ssh_host
     </select>

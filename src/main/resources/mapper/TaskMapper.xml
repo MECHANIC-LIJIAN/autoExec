@@ -72,6 +72,9 @@
         AND ssa.action_id = #{actionId}
         LIMIT 1
     </select>
+    <select id="queryTaskByName" resultType="com.magic.ssh.entity.Task">
+        SELECT * FROM ssh_task WHERE task_name= #{taskName}
+    </select>
 
     <delete id="deleteStep">
         DELETE FROM ssh_step_action WHERE task_id=#{taskId}

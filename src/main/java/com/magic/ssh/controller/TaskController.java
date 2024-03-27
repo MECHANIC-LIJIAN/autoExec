@@ -1,5 +1,6 @@
 package com.magic.ssh.controller;
 
+import com.magic.ssh.SysConstants;
 import com.magic.ssh.entity.Task;
 import com.magic.ssh.service.TaskService;
 import com.magic.ssh.util.Result;
@@ -9,7 +10,8 @@ import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Objects;
+
+import static com.magic.ssh.util.ResultCode.TASK_ADD_DP;
 
 @Slf4j
 @RestController
@@ -25,7 +27,7 @@ public class TaskController {
     @GetMapping("/query")
     public Result guery(@RequestParam Integer taskId) {
         Task task = taskService.getTaskInfoById(taskId);
-        task.setActionList(null);
+//        task.setActionList(null);
         task.setExecList(taskService.getExecStepList(task));
         return Result.success(task);
     }
@@ -39,8 +41,11 @@ public class TaskController {
 
     @PostMapping("/add")
     public Result add(@Validated(Task.Create.class) @RequestBody Task task) {
-        if (taskService.insertTask(task) > 0) {
+        int ret = taskService.insertTask(task);
+        if (ret == SysConstants.OP_SUCCESS) {
             return Result.success();
+        } else if (ret == SysConstants.RESOURCE_DP) {
+            return Result.build(TASK_ADD_DP);
         } else {
             return Result.build(ResultCode.OP_ERROR);
         }

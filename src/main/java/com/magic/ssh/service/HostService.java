@@ -7,7 +7,10 @@ import java.net.UnknownHostException;
 import java.util.List;
 
 public interface HostService {
-    Host getHostInfoById(String hostId);
+    Host getHostById(String hostId);
+
+    Host getHostByName(String hostName);
+
 
     Integer insertHost(Host host) throws UnknownHostException;
 

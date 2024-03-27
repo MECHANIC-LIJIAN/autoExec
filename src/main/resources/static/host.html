@@ -35,33 +35,6 @@
             </div>
 
         </div>
-        <!-- <div class="row">
-            <div class="col-12">
-                <div class="card">
-                    <div class="card-body" style="padding-bottom:0px;">
-                        <form id="formSearch" class="form-inline">
-                            <div class="form-group mb-3" style="margin-top:15px">
-                                <label class="control-label col-sm-4" for="txt_search_departmentname">部门名称</label>
-                                <div class="col-sm-6">
-                                    <input type="text" class="form-control" id="txt_search_departmentname">
-                                </div>
-                            </div>
-                            <div class="form-group mb-3" style="margin-top:15px">
-                                <label class="control-label col-sm-4" for="txt_search_statu">状态</label>
-                                <div class="col-sm-6">
-                                    <input type="text" class="form-control" id="txt_search_statu">
-                                </div>
-                            </div>
-                            <div class="col-sm-4" style="text-align:left;">
-                                <button type="button" style="margin-left:50px" id="btn_query"
-                                    class="btn btn-primary">查询</button>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div> -->
-
         <div class="row">
             <div class="col-12">
 
@@ -75,13 +48,17 @@
                     <button id="btn_delete" type="button" class="btn btn-danger">
                         <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>删除
                     </button>
+                    <button id="btn_import" type="button" class="btn btn-info">
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true">批量上传</span>
+                    </button>
+                    <input type="file" name="fileupload" id="fileupload" style="display: none;"
+                        accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" />
                 </div>
             </div>
 
         </div>
         <div class="row">
             <div class="col-12">
-
                 <table id="tb_host"></table>
             </div>
         </div>
@@ -159,6 +136,26 @@
         var oTable = new TableInit();
         oTable.Init();
 
+        $('#fileupload').on('input propertychange', function () {
+            const files = $('#fileupload').prop('files');
+            var data = new FormData();
+            data.append('file', files[0]);
+            $.ajax({
+                url: 'http://127.0.0.1:30023/api/host/import',
+                type: 'POST',
+                data: data,
+                cache: false,
+                processData: false,
+                contentType: false,
+                success: function (data, status) {
+                    alert(data["msg"])
+                },
+                error: function (xhr, textStatus) {
+                    alert(textStatus)
+                },
+            });
+        });
+
     });
 
     var TableInit = function () {
@@ -178,10 +175,8 @@
                 pageNumber: 1,
                 pageSize: 20,
                 pageList: [20, 30, 50], //设置为 All 或者 Unlimited，则显示所有记录。
-                sortName: "step",                     //是否启用排序
                 sortOrder: "asc",                   //排序方式
-                height: $(window).height() - 200,   //table总高，如果没有设置height属性，表格自动根据记录条数觉得表格高度
-                uniqueId: "actionLogId",                     //每一行的唯一标识，一般为主键列
+                height: $(window).height() - 100,   //table总高，如果没有设置height属性，表格自动根据记录条数觉得表格高度
                 clickToSelect: true,                //是否启用点击选中行
                 singleSelect: true,                 //是否单选模式
 
@@ -200,28 +195,13 @@
                         title: '用户名'
                     },],
                 responseHandler: function (res) {
-                    //动态渲染表格之前获取有后台传递的数据时,用于获取出除去本身渲染所需的数据的额外参数
-                    //详见此函数参数的api
-                    // console.log(res)
-                    const data = res['data']
-                    return data;
+                    return res['data']
                 },
                 onLoadSuccess: function (res) {
                 },
                 onLoadError: function () {
                     alert("数据加载失败！");
-                },
-                onCheck: function (row, $element, field) {
-                    const rows = $('#tb_host').bootstrapTable('getSelections');
-                    const cancelRows = rows.filter((r) => r.hostId !== row.hostId)
-                    const cancelIds = cancelRows.map((ele) => {
-                        return ele.hostId
-                    });
-                    // console.log(cancelIds)
-                    $('#tb_host').bootstrapTable('uncheckBy', { field: 'hostId', values: cancelIds });
                 }
-
-
             });
         };
 
@@ -229,10 +209,9 @@
     };
 
 
-    $("#btn_add").click(function () {
-        $("#formAdd")[0].reset();
-        $('#myModal').modal('show')
-
+    $("#btn_import").click(function () {
+        $("#fileupload").val("")
+        $("#fileupload").click()
     });
 
     $("#addBtn").click(function () {

@@ -1,5 +1,6 @@
 package com.magic.ssh.service.impl;
 
+import com.magic.ssh.SysConstants;
 import com.magic.ssh.entity.Action;
 import com.magic.ssh.mapper.ActionMapper;
 import com.magic.ssh.service.ActionService;
@@ -24,7 +25,15 @@ public class ActionServiceImpl implements ActionService {
     }
 
     @Override
+    public Action getActionByName(String actionName) {
+        return actionMapper.queryActionByName(actionName);
+    }
+
+    @Override
     public Integer insertAction(Action action){
+        if (Objects.nonNull(actionMapper.queryActionByName(action.getActionName()))) {
+            return SysConstants.RESOURCE_DP;
+        }
         return actionMapper.insertAction(action);
     }
 
@@ -32,7 +41,7 @@ public class ActionServiceImpl implements ActionService {
     public Integer updateAction(Action action) {
         Action myAction=actionMapper.queryAction(action.getActionId());
         if (Objects.isNull(myAction)){
-            return -1;
+            return SysConstants.OP_ERROR;
         }
 
         return actionMapper.updateAction(action);
@@ -42,7 +51,7 @@ public class ActionServiceImpl implements ActionService {
     public Integer deleteAction(Integer actionId) {
         Action myAction=actionMapper.queryAction(actionId);
         if (Objects.isNull(myAction)){
-            return -1;
+            return SysConstants.OP_ERROR;
         }
         return actionMapper.deleteAction(actionId);
     }

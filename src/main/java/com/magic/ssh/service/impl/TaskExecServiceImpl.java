@@ -35,6 +35,7 @@ public class TaskExecServiceImpl implements TaskExecService {
 
     @Override
     public void asyncExec(List<List<Action>> stepList, TaskLog taskLog) {
+
         log.debug("exec actions, step size: {}", stepList.size());
         AtomicReference<Integer> taskStep = new AtomicReference<>(taskLog.getCurStep());
         List<StepLog> taskStepActionList = new ArrayList<>();
@@ -53,7 +54,7 @@ public class TaskExecServiceImpl implements TaskExecService {
                         //该步一个动作时，同步执行
                         actionLog = sshService.syncExecCmd(actions.get(0));
                         taskStepActionList.add(new StepLog(taskLog.getTaskLogId(), actionLog.getActionLogId(),
-                                taskStep.get()));
+                                actionLog.getStep()));
                         //检查结果
                         breakFlag = checkBreak(actionLog, taskLog);
                     } else {
@@ -75,12 +76,12 @@ public class TaskExecServiceImpl implements TaskExecService {
                         });
 
                         allFutures.get();
-                        for (ActionLog actionLog1 : actionLogs) {
-                            taskStepActionList.add(new StepLog(taskLog.getTaskLogId(), actionLog1.getActionLogId(),
-                                    taskStep.get()));
-                            actionLog = actionLog1;
+                        for (ActionLog subLog : actionLogs) {
+                            taskStepActionList.add(new StepLog(taskLog.getTaskLogId(), subLog.getActionLogId(),
+                                    subLog.getStep()));
+                            actionLog = subLog;
                             //检查结果
-                            breakFlag = checkBreak(actionLog1, taskLog);
+                            breakFlag = checkBreak(subLog, taskLog);
                             if (breakFlag) {
                                 break;
                             }
@@ -94,7 +95,6 @@ public class TaskExecServiceImpl implements TaskExecService {
                     if (breakFlag) {
                         break;
                     }
-
                     taskStep.getAndSet(taskStep.get() + 1);
                 }
                 //记录任务状态
@@ -118,9 +118,9 @@ public class TaskExecServiceImpl implements TaskExecService {
 
                 log.debug("记录任务日志...");
                 taskLog.setEndTime(System.currentTimeMillis());
+                log.debug("task {} cost: {}ms", taskLog.getTaskName(), taskLog.getEndTime() - taskLog.getStartTime());
                 taskLogService.updateTaskLog(taskLog);
 
-                log.debug(taskLog.toString());
             }
         });
     }

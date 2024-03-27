@@ -55,29 +55,24 @@
 
     <select id="queryLogByTaskLogId" resultMap="taskStepLog">
         SELECT
-            task_log_id,task_id,task_start_time,task_end_time,task_status,cur_step,reason task_reason,action_name,
-            a.action_id,a.step,b.*
+        task_log_id,task_id,task_start_time,task_end_time,task_status,cur_step,reason task_reason,action_name,
+        a.action_id,a.step,b.*
         FROM
-        (
+            (
             SELECT
                 stl.task_log_id,stl.task_id,stl.start_time task_start_time,stl.end_time task_end_time,stl. STATUS task_status,
                 stl.cur_step,stl.reason task_reason,ssa.step,sa.action_name,sa.action_id
-            FROM
-                ssh_task_log stl
-            INNER JOIN ssh_step_action ssa ON ssa.task_id = stl.task_id
+            FROM ssh_task_log stl
+            INNER JOIN ssh_step_action ssa ON ssa.task_id = stl.task_id AND stl.task_log_id = #{taskLogId}
             LEFT JOIN ssh_action sa ON ssa.action_id = sa.action_id
-        WHERE
-            stl.task_log_id = #{taskLogId}
-        ) a
-        LEFT JOIN (
-            SELECT
-                sal.*
-            FROM
-                ssh_step_log sstl
-            INNER JOIN ssh_action_log sal ON sstl.action_log_id = sal.action_log_id
-            WHERE
-                sstl.task_log_id = #{taskLogId}
-        ) b ON a.action_id = b.action_id
+            ) a
+            LEFT JOIN (
+                SELECT
+                sal.*,sstl.step
+                FROM ssh_step_log sstl
+                INNER JOIN ssh_action_log sal ON sstl.action_log_id = sal.action_log_id
+                WHERE sstl.task_log_id  = #{taskLogId}
+        ) b ON a.action_id = b.action_id and a.step=b.step
         ORDER BY step,end_time
     </select>
 

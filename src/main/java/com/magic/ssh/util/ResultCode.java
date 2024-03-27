@@ -25,6 +25,7 @@ public enum ResultCode {
 
     ACTION_NOT_EXIST(1031,"动作不存在"),
 
+    TASK_ADD_DP(1043,"任务名重复"),
 
     TASK_NOT_EXIST(1041,"任务不存在"),
     TASK_EXEC_ERROR(1042,"任务执行失败"),

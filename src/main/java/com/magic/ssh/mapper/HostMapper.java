@@ -10,6 +10,8 @@ public interface HostMapper {
 
     Host queryHost(String hostId);
 
+    Host queryHostByName(String hostName);
+
     Integer insertHost(Host host);
 
     Integer updateHost(Host host);

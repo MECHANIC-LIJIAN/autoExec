@@ -74,6 +74,11 @@
                     <button id="btn_delete" type="button" class="btn btn-danger">
                         <span class="glyphicon glyphicon-remove" aria-hidden="true"></span>删除
                     </button>
+                    <button id="btn_import" type="button" class="btn btn-info">
+                        <span class="glyphicon glyphicon-plus" aria-hidden="true">批量上传</span>
+                    </button>
+                    <input type="file" name="fileupload" id="fileupload" style="display: none;"
+                        accept=".csv, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet, application/vnd.ms-excel" />
                 </div>
             </div>
 
@@ -207,6 +212,32 @@
             }
         });
 
+
+        $('#fileupload').on('input propertychange', function () {
+            const files = $('#fileupload').prop('files');
+            var data = new FormData();
+            data.append('file', files[0]);
+            $.ajax({
+                url: 'http://127.0.0.1:30023/api/action/import',
+                type: 'POST',
+                data: data,
+                cache: false,
+                processData: false,
+                contentType: false,
+                success: function (data, status) {
+                    alert(data["msg"])
+                },
+                error: function (xhr, textStatus) {
+                    alert(textStatus)
+                },
+            });
+        });
+
+        $("#btn_import").click(function () {
+            $("#fileupload").val("")
+            $("#fileupload").click()
+        });
+
     });
 
     var TableInit = function () {
@@ -231,9 +262,8 @@
                 showRefresh: true,                  //是否显示刷新按钮
                 clickToSelect: true,                //是否启用点击选中行
                 singleSelect: true,                 //是否单选模式
-                height: $(window).height() - 200,   //table总高，如果没有设置height属性，表格自动根据记录条数觉得表格高度
+                height: $(window).height() - 100,   //table总高，如果没有设置height属性，表格自动根据记录条数觉得表格高度
                 uniqueId: "actionId",                     //每一行的唯一标识，一般为主键列
-                clickToSelect: true,                //是否启用点击选中行
 
                 columns: [
                     { checkbox: true },
@@ -276,17 +306,7 @@
                 },
                 onLoadError: function () {
                     alert("数据加载失败！");
-                },
-                onCheck: function (row, $element, field) {
-                    const rows = $('#tb_action').bootstrapTable('getSelections');
-                    const cancelRows = rows.filter((r) => r.actionId !== row.actionId)
-                    const cancelIds = cancelRows.map((ele) => {
-                        return ele.actionId
-                    });
-                    // console.log(cancelIds)
-                    $('#tb_action').bootstrapTable('uncheckBy', { field: 'actionId', values: cancelIds });
                 }
-
 
             });
         };
@@ -307,9 +327,9 @@
                 contentType: 'application/json',
                 dataType: 'JSON',
                 success: function (data, status) {
-                    if(data['code']!==200){
+                    if (data['code'] !== 200) {
                         alert(data["msg"]);
-                    }else{
+                    } else {
                         alert("删除成功")
                     }
                 },
